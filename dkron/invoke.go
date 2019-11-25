@@ -2,21 +2,21 @@ package dkron
 
 import (
 	"errors"
-	"math/rand"
 	"time"
 
 	"github.com/armon/circbuf"
-	"github.com/hashicorp/serf/serf"
+	"github.com/golang/groupcache/consistenthash"
 )
 
 const (
-	windows = "windows"
-
 	// maxBufSize limits how much data we collect from a handler.
 	// This is to prevent Serf's memory from growing to an enormous
 	// amount due to a faulty handler.
 	maxBufSize = 256000
 )
+
+// ErrNoSuitableServer returns an error in case no suitable server to send the request is found.
+var ErrNoSuitableServer = errors.New("no suitable server found to send the request, aborting")
 
 // invokeJob will execute the given job. Depending on the event.
 func (a *Agent) invokeJob(job *Job, execution *Execution) error {
@@ -30,7 +30,7 @@ func (a *Agent) invokeJob(job *Job, execution *Execution) error {
 		return errors.New("invoke: No executor defined, nothing to do")
 	}
 
-	// Check if executor is exists
+	// Check if executor exists
 	if executor, ok := a.ExecutorPlugins[jex]; ok {
 		log.WithField("plugin", jex).Debug("invoke: calling executor plugin")
 		runningExecutions.Store(execution.GetGroup(), execution)
@@ -61,33 +61,29 @@ func (a *Agent) invokeJob(job *Job, execution *Execution) error {
 	execution.Success = success
 	execution.Output = output.Bytes()
 
-	rpcServer, err := a.getServerRPCAddresFromTags()
+	rpcServer, err := a.selectServerByKey(execution.Key())
 	if err != nil {
 		return err
 	}
+	log.WithField("server", rpcServer).Debug("invoke: Selected a server to send result")
 
 	runningExecutions.Delete(execution.GetGroup())
 
-	return a.GRPCClient.CallExecutionDone(rpcServer, execution)
+	return a.GRPCClient.ExecutionDone(rpcServer, execution)
 }
 
-func (a *Agent) selectServer() serf.Member {
-	var server serf.Member
-
-	servers := a.listServers()
-
-	if len(servers) > 0 {
-		server = servers[rand.Intn(len(servers))]
+// Select a server based on key using a consistent hash key
+// like a cache store.
+func (a *Agent) selectServerByKey(key string) (string, error) {
+	ch := consistenthash.New(50, nil)
+	for _, p := range a.LocalServers() {
+		ch.Add(p.RPCAddr.String())
 	}
 
-	return server
-}
-
-func (a *Agent) getServerRPCAddresFromTags() (string, error) {
-	s := a.selectServer()
-
-	if addr, ok := s.Tags["dkron_rpc_addr"]; ok {
-		return addr, nil
+	peerAddress := ch.Get(key)
+	if peerAddress == "" {
+		return "", ErrNoSuitableServer
 	}
-	return "", ErrNoRPCAddress
+
+	return peerAddress, nil
 }

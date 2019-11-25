@@ -3,15 +3,16 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import empty "github.com/golang/protobuf/ptypes/empty"
-import timestamp "github.com/golang/protobuf/ptypes/timestamp"
-
 import (
-	context "golang.org/x/net/context"
+	context "context"
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	empty "github.com/golang/protobuf/ptypes/empty"
+	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -23,7 +24,456 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+
+type Job struct {
+	Name                 string                   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Timezone             string                   `protobuf:"bytes,2,opt,name=timezone,proto3" json:"timezone,omitempty"`
+	Schedule             string                   `protobuf:"bytes,3,opt,name=schedule,proto3" json:"schedule,omitempty"`
+	Owner                string                   `protobuf:"bytes,7,opt,name=owner,proto3" json:"owner,omitempty"`
+	OwnerEmail           string                   `protobuf:"bytes,8,opt,name=owner_email,json=ownerEmail,proto3" json:"owner_email,omitempty"`
+	SuccessCount         int32                    `protobuf:"varint,9,opt,name=success_count,json=successCount,proto3" json:"success_count,omitempty"`
+	ErrorCount           int32                    `protobuf:"varint,10,opt,name=error_count,json=errorCount,proto3" json:"error_count,omitempty"`
+	Disabled             bool                     `protobuf:"varint,11,opt,name=disabled,proto3" json:"disabled,omitempty"`
+	Tags                 map[string]string        `protobuf:"bytes,12,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Retries              uint32                   `protobuf:"varint,13,opt,name=retries,proto3" json:"retries,omitempty"`
+	DependentJobs        []string                 `protobuf:"bytes,14,rep,name=dependent_jobs,json=dependentJobs,proto3" json:"dependent_jobs,omitempty"`
+	ParentJob            string                   `protobuf:"bytes,15,opt,name=parent_job,json=parentJob,proto3" json:"parent_job,omitempty"`
+	Concurrency          string                   `protobuf:"bytes,16,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
+	Executor             string                   `protobuf:"bytes,17,opt,name=executor,proto3" json:"executor,omitempty"`
+	ExecutorConfig       map[string]string        `protobuf:"bytes,18,rep,name=executor_config,json=executorConfig,proto3" json:"executor_config,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Status               string                   `protobuf:"bytes,19,opt,name=status,proto3" json:"status,omitempty"`
+	Metadata             map[string]string        `protobuf:"bytes,20,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	LastSuccess          *Job_NullableTime        `protobuf:"bytes,25,opt,name=last_success,json=lastSuccess,proto3" json:"last_success,omitempty"`
+	LastError            *Job_NullableTime        `protobuf:"bytes,26,opt,name=last_error,json=lastError,proto3" json:"last_error,omitempty"`
+	Next                 *timestamp.Timestamp     `protobuf:"bytes,23,opt,name=next,proto3" json:"next,omitempty"`
+	Displayname          string                   `protobuf:"bytes,24,opt,name=displayname,proto3" json:"displayname,omitempty"`
+	Processors           map[string]*PluginConfig `protobuf:"bytes,27,rep,name=processors,proto3" json:"processors,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}                 `json:"-"`
+	XXX_unrecognized     []byte                   `json:"-"`
+	XXX_sizecache        int32                    `json:"-"`
+}
+
+func (m *Job) Reset()         { *m = Job{} }
+func (m *Job) String() string { return proto.CompactTextString(m) }
+func (*Job) ProtoMessage()    {}
+func (*Job) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{0}
+}
+
+func (m *Job) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Job.Unmarshal(m, b)
+}
+func (m *Job) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Job.Marshal(b, m, deterministic)
+}
+func (m *Job) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Job.Merge(m, src)
+}
+func (m *Job) XXX_Size() int {
+	return xxx_messageInfo_Job.Size(m)
+}
+func (m *Job) XXX_DiscardUnknown() {
+	xxx_messageInfo_Job.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Job proto.InternalMessageInfo
+
+func (m *Job) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *Job) GetTimezone() string {
+	if m != nil {
+		return m.Timezone
+	}
+	return ""
+}
+
+func (m *Job) GetSchedule() string {
+	if m != nil {
+		return m.Schedule
+	}
+	return ""
+}
+
+func (m *Job) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *Job) GetOwnerEmail() string {
+	if m != nil {
+		return m.OwnerEmail
+	}
+	return ""
+}
+
+func (m *Job) GetSuccessCount() int32 {
+	if m != nil {
+		return m.SuccessCount
+	}
+	return 0
+}
+
+func (m *Job) GetErrorCount() int32 {
+	if m != nil {
+		return m.ErrorCount
+	}
+	return 0
+}
+
+func (m *Job) GetDisabled() bool {
+	if m != nil {
+		return m.Disabled
+	}
+	return false
+}
+
+func (m *Job) GetTags() map[string]string {
+	if m != nil {
+		return m.Tags
+	}
+	return nil
+}
+
+func (m *Job) GetRetries() uint32 {
+	if m != nil {
+		return m.Retries
+	}
+	return 0
+}
+
+func (m *Job) GetDependentJobs() []string {
+	if m != nil {
+		return m.DependentJobs
+	}
+	return nil
+}
+
+func (m *Job) GetParentJob() string {
+	if m != nil {
+		return m.ParentJob
+	}
+	return ""
+}
+
+func (m *Job) GetConcurrency() string {
+	if m != nil {
+		return m.Concurrency
+	}
+	return ""
+}
+
+func (m *Job) GetExecutor() string {
+	if m != nil {
+		return m.Executor
+	}
+	return ""
+}
+
+func (m *Job) GetExecutorConfig() map[string]string {
+	if m != nil {
+		return m.ExecutorConfig
+	}
+	return nil
+}
+
+func (m *Job) GetStatus() string {
+	if m != nil {
+		return m.Status
+	}
+	return ""
+}
+
+func (m *Job) GetMetadata() map[string]string {
+	if m != nil {
+		return m.Metadata
+	}
+	return nil
+}
+
+func (m *Job) GetLastSuccess() *Job_NullableTime {
+	if m != nil {
+		return m.LastSuccess
+	}
+	return nil
+}
+
+func (m *Job) GetLastError() *Job_NullableTime {
+	if m != nil {
+		return m.LastError
+	}
+	return nil
+}
+
+func (m *Job) GetNext() *timestamp.Timestamp {
+	if m != nil {
+		return m.Next
+	}
+	return nil
+}
+
+func (m *Job) GetDisplayname() string {
+	if m != nil {
+		return m.Displayname
+	}
+	return ""
+}
+
+func (m *Job) GetProcessors() map[string]*PluginConfig {
+	if m != nil {
+		return m.Processors
+	}
+	return nil
+}
+
+type Job_NullableTime struct {
+	HasValue             bool                 `protobuf:"varint,1,opt,name=has_value,json=hasValue,proto3" json:"has_value,omitempty"`
+	Time                 *timestamp.Timestamp `protobuf:"bytes,2,opt,name=time,proto3" json:"time,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
+}
+
+func (m *Job_NullableTime) Reset()         { *m = Job_NullableTime{} }
+func (m *Job_NullableTime) String() string { return proto.CompactTextString(m) }
+func (*Job_NullableTime) ProtoMessage()    {}
+func (*Job_NullableTime) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{0, 3}
+}
+
+func (m *Job_NullableTime) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Job_NullableTime.Unmarshal(m, b)
+}
+func (m *Job_NullableTime) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Job_NullableTime.Marshal(b, m, deterministic)
+}
+func (m *Job_NullableTime) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Job_NullableTime.Merge(m, src)
+}
+func (m *Job_NullableTime) XXX_Size() int {
+	return xxx_messageInfo_Job_NullableTime.Size(m)
+}
+func (m *Job_NullableTime) XXX_DiscardUnknown() {
+	xxx_messageInfo_Job_NullableTime.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Job_NullableTime proto.InternalMessageInfo
+
+func (m *Job_NullableTime) GetHasValue() bool {
+	if m != nil {
+		return m.HasValue
+	}
+	return false
+}
+
+func (m *Job_NullableTime) GetTime() *timestamp.Timestamp {
+	if m != nil {
+		return m.Time
+	}
+	return nil
+}
+
+type PluginConfig struct {
+	Config               map[string]string `protobuf:"bytes,1,rep,name=config,proto3" json:"config,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *PluginConfig) Reset()         { *m = PluginConfig{} }
+func (m *PluginConfig) String() string { return proto.CompactTextString(m) }
+func (*PluginConfig) ProtoMessage()    {}
+func (*PluginConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{1}
+}
+
+func (m *PluginConfig) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PluginConfig.Unmarshal(m, b)
+}
+func (m *PluginConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PluginConfig.Marshal(b, m, deterministic)
+}
+func (m *PluginConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PluginConfig.Merge(m, src)
+}
+func (m *PluginConfig) XXX_Size() int {
+	return xxx_messageInfo_PluginConfig.Size(m)
+}
+func (m *PluginConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_PluginConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PluginConfig proto.InternalMessageInfo
+
+func (m *PluginConfig) GetConfig() map[string]string {
+	if m != nil {
+		return m.Config
+	}
+	return nil
+}
+
+type SetJobRequest struct {
+	Job                  *Job     `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *SetJobRequest) Reset()         { *m = SetJobRequest{} }
+func (m *SetJobRequest) String() string { return proto.CompactTextString(m) }
+func (*SetJobRequest) ProtoMessage()    {}
+func (*SetJobRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{2}
+}
+
+func (m *SetJobRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SetJobRequest.Unmarshal(m, b)
+}
+func (m *SetJobRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SetJobRequest.Marshal(b, m, deterministic)
+}
+func (m *SetJobRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SetJobRequest.Merge(m, src)
+}
+func (m *SetJobRequest) XXX_Size() int {
+	return xxx_messageInfo_SetJobRequest.Size(m)
+}
+func (m *SetJobRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SetJobRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SetJobRequest proto.InternalMessageInfo
+
+func (m *SetJobRequest) GetJob() *Job {
+	if m != nil {
+		return m.Job
+	}
+	return nil
+}
+
+type SetJobResponse struct {
+	Job                  *Job     `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *SetJobResponse) Reset()         { *m = SetJobResponse{} }
+func (m *SetJobResponse) String() string { return proto.CompactTextString(m) }
+func (*SetJobResponse) ProtoMessage()    {}
+func (*SetJobResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{3}
+}
+
+func (m *SetJobResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SetJobResponse.Unmarshal(m, b)
+}
+func (m *SetJobResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SetJobResponse.Marshal(b, m, deterministic)
+}
+func (m *SetJobResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SetJobResponse.Merge(m, src)
+}
+func (m *SetJobResponse) XXX_Size() int {
+	return xxx_messageInfo_SetJobResponse.Size(m)
+}
+func (m *SetJobResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SetJobResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SetJobResponse proto.InternalMessageInfo
+
+func (m *SetJobResponse) GetJob() *Job {
+	if m != nil {
+		return m.Job
+	}
+	return nil
+}
+
+type DeleteJobRequest struct {
+	JobName              string   `protobuf:"bytes,1,opt,name=job_name,json=jobName,proto3" json:"job_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DeleteJobRequest) Reset()         { *m = DeleteJobRequest{} }
+func (m *DeleteJobRequest) String() string { return proto.CompactTextString(m) }
+func (*DeleteJobRequest) ProtoMessage()    {}
+func (*DeleteJobRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{4}
+}
+
+func (m *DeleteJobRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteJobRequest.Unmarshal(m, b)
+}
+func (m *DeleteJobRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteJobRequest.Marshal(b, m, deterministic)
+}
+func (m *DeleteJobRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteJobRequest.Merge(m, src)
+}
+func (m *DeleteJobRequest) XXX_Size() int {
+	return xxx_messageInfo_DeleteJobRequest.Size(m)
+}
+func (m *DeleteJobRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteJobRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteJobRequest proto.InternalMessageInfo
+
+func (m *DeleteJobRequest) GetJobName() string {
+	if m != nil {
+		return m.JobName
+	}
+	return ""
+}
+
+type DeleteJobResponse struct {
+	Job                  *Job     `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DeleteJobResponse) Reset()         { *m = DeleteJobResponse{} }
+func (m *DeleteJobResponse) String() string { return proto.CompactTextString(m) }
+func (*DeleteJobResponse) ProtoMessage()    {}
+func (*DeleteJobResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{5}
+}
+
+func (m *DeleteJobResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteJobResponse.Unmarshal(m, b)
+}
+func (m *DeleteJobResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteJobResponse.Marshal(b, m, deterministic)
+}
+func (m *DeleteJobResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteJobResponse.Merge(m, src)
+}
+func (m *DeleteJobResponse) XXX_Size() int {
+	return xxx_messageInfo_DeleteJobResponse.Size(m)
+}
+func (m *DeleteJobResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteJobResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteJobResponse proto.InternalMessageInfo
+
+func (m *DeleteJobResponse) GetJob() *Job {
+	if m != nil {
+		return m.Job
+	}
+	return nil
+}
 
 type GetJobRequest struct {
 	JobName              string   `protobuf:"bytes,1,opt,name=job_name,json=jobName,proto3" json:"job_name,omitempty"`
@@ -36,16 +486,17 @@ func (m *GetJobRequest) Reset()         { *m = GetJobRequest{} }
 func (m *GetJobRequest) String() string { return proto.CompactTextString(m) }
 func (*GetJobRequest) ProtoMessage()    {}
 func (*GetJobRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dkron_53e25a55b3cc2668, []int{0}
+	return fileDescriptor_1f0292872e9433f8, []int{6}
 }
+
 func (m *GetJobRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetJobRequest.Unmarshal(m, b)
 }
 func (m *GetJobRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetJobRequest.Marshal(b, m, deterministic)
 }
-func (dst *GetJobRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetJobRequest.Merge(dst, src)
+func (m *GetJobRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetJobRequest.Merge(m, src)
 }
 func (m *GetJobRequest) XXX_Size() int {
 	return xxx_messageInfo_GetJobRequest.Size(m)
@@ -64,41 +515,27 @@ func (m *GetJobRequest) GetJobName() string {
 }
 
 type GetJobResponse struct {
-	Name                 string            `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Timezone             string            `protobuf:"bytes,2,opt,name=timezone,proto3" json:"timezone,omitempty"`
-	Schedule             string            `protobuf:"bytes,3,opt,name=schedule,proto3" json:"schedule,omitempty"`
-	Owner                string            `protobuf:"bytes,7,opt,name=owner,proto3" json:"owner,omitempty"`
-	OwnerEmail           string            `protobuf:"bytes,8,opt,name=owner_email,json=ownerEmail,proto3" json:"owner_email,omitempty"`
-	SuccessCount         int32             `protobuf:"varint,9,opt,name=success_count,json=successCount,proto3" json:"success_count,omitempty"`
-	ErrorCount           int32             `protobuf:"varint,10,opt,name=error_count,json=errorCount,proto3" json:"error_count,omitempty"`
-	Disabled             bool              `protobuf:"varint,11,opt,name=disabled,proto3" json:"disabled,omitempty"`
-	Tags                 map[string]string `protobuf:"bytes,12,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	Retries              uint32            `protobuf:"varint,13,opt,name=retries,proto3" json:"retries,omitempty"`
-	DependentJobs        []string          `protobuf:"bytes,14,rep,name=dependent_jobs,json=dependentJobs,proto3" json:"dependent_jobs,omitempty"`
-	ParentJob            string            `protobuf:"bytes,15,opt,name=parent_job,json=parentJob,proto3" json:"parent_job,omitempty"`
-	Concurrency          string            `protobuf:"bytes,16,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
-	Executor             string            `protobuf:"bytes,17,opt,name=executor,proto3" json:"executor,omitempty"`
-	ExecutorConfig       map[string]string `protobuf:"bytes,18,rep,name=executor_config,json=executorConfig,proto3" json:"executor_config,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	Status               string            `protobuf:"bytes,19,opt,name=status,proto3" json:"status,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
-	XXX_unrecognized     []byte            `json:"-"`
-	XXX_sizecache        int32             `json:"-"`
+	Job                  *Job     `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *GetJobResponse) Reset()         { *m = GetJobResponse{} }
 func (m *GetJobResponse) String() string { return proto.CompactTextString(m) }
 func (*GetJobResponse) ProtoMessage()    {}
 func (*GetJobResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dkron_53e25a55b3cc2668, []int{1}
+	return fileDescriptor_1f0292872e9433f8, []int{7}
 }
+
 func (m *GetJobResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetJobResponse.Unmarshal(m, b)
 }
 func (m *GetJobResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetJobResponse.Marshal(b, m, deterministic)
 }
-func (dst *GetJobResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetJobResponse.Merge(dst, src)
+func (m *GetJobResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetJobResponse.Merge(m, src)
 }
 func (m *GetJobResponse) XXX_Size() int {
 	return xxx_messageInfo_GetJobResponse.Size(m)
@@ -109,119 +546,14 @@ func (m *GetJobResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetJobResponse proto.InternalMessageInfo
 
-func (m *GetJobResponse) GetName() string {
+func (m *GetJobResponse) GetJob() *Job {
 	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *GetJobResponse) GetTimezone() string {
-	if m != nil {
-		return m.Timezone
-	}
-	return ""
-}
-
-func (m *GetJobResponse) GetSchedule() string {
-	if m != nil {
-		return m.Schedule
-	}
-	return ""
-}
-
-func (m *GetJobResponse) GetOwner() string {
-	if m != nil {
-		return m.Owner
-	}
-	return ""
-}
-
-func (m *GetJobResponse) GetOwnerEmail() string {
-	if m != nil {
-		return m.OwnerEmail
-	}
-	return ""
-}
-
-func (m *GetJobResponse) GetSuccessCount() int32 {
-	if m != nil {
-		return m.SuccessCount
-	}
-	return 0
-}
-
-func (m *GetJobResponse) GetErrorCount() int32 {
-	if m != nil {
-		return m.ErrorCount
-	}
-	return 0
-}
-
-func (m *GetJobResponse) GetDisabled() bool {
-	if m != nil {
-		return m.Disabled
-	}
-	return false
-}
-
-func (m *GetJobResponse) GetTags() map[string]string {
-	if m != nil {
-		return m.Tags
+		return m.Job
 	}
 	return nil
 }
 
-func (m *GetJobResponse) GetRetries() uint32 {
-	if m != nil {
-		return m.Retries
-	}
-	return 0
-}
-
-func (m *GetJobResponse) GetDependentJobs() []string {
-	if m != nil {
-		return m.DependentJobs
-	}
-	return nil
-}
-
-func (m *GetJobResponse) GetParentJob() string {
-	if m != nil {
-		return m.ParentJob
-	}
-	return ""
-}
-
-func (m *GetJobResponse) GetConcurrency() string {
-	if m != nil {
-		return m.Concurrency
-	}
-	return ""
-}
-
-func (m *GetJobResponse) GetExecutor() string {
-	if m != nil {
-		return m.Executor
-	}
-	return ""
-}
-
-func (m *GetJobResponse) GetExecutorConfig() map[string]string {
-	if m != nil {
-		return m.ExecutorConfig
-	}
-	return nil
-}
-
-func (m *GetJobResponse) GetStatus() string {
-	if m != nil {
-		return m.Status
-	}
-	return ""
-}
-
-type ExecutionDoneRequest struct {
+type Execution struct {
 	JobName              string               `protobuf:"bytes,1,opt,name=job_name,json=jobName,proto3" json:"job_name,omitempty"`
 	Success              bool                 `protobuf:"varint,2,opt,name=success,proto3" json:"success,omitempty"`
 	Output               []byte               `protobuf:"bytes,3,opt,name=output,proto3" json:"output,omitempty"`
@@ -235,20 +567,109 @@ type ExecutionDoneRequest struct {
 	XXX_sizecache        int32                `json:"-"`
 }
 
+func (m *Execution) Reset()         { *m = Execution{} }
+func (m *Execution) String() string { return proto.CompactTextString(m) }
+func (*Execution) ProtoMessage()    {}
+func (*Execution) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{8}
+}
+
+func (m *Execution) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Execution.Unmarshal(m, b)
+}
+func (m *Execution) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Execution.Marshal(b, m, deterministic)
+}
+func (m *Execution) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Execution.Merge(m, src)
+}
+func (m *Execution) XXX_Size() int {
+	return xxx_messageInfo_Execution.Size(m)
+}
+func (m *Execution) XXX_DiscardUnknown() {
+	xxx_messageInfo_Execution.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Execution proto.InternalMessageInfo
+
+func (m *Execution) GetJobName() string {
+	if m != nil {
+		return m.JobName
+	}
+	return ""
+}
+
+func (m *Execution) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
+func (m *Execution) GetOutput() []byte {
+	if m != nil {
+		return m.Output
+	}
+	return nil
+}
+
+func (m *Execution) GetNodeName() string {
+	if m != nil {
+		return m.NodeName
+	}
+	return ""
+}
+
+func (m *Execution) GetGroup() int64 {
+	if m != nil {
+		return m.Group
+	}
+	return 0
+}
+
+func (m *Execution) GetAttempt() uint32 {
+	if m != nil {
+		return m.Attempt
+	}
+	return 0
+}
+
+func (m *Execution) GetStartedAt() *timestamp.Timestamp {
+	if m != nil {
+		return m.StartedAt
+	}
+	return nil
+}
+
+func (m *Execution) GetFinishedAt() *timestamp.Timestamp {
+	if m != nil {
+		return m.FinishedAt
+	}
+	return nil
+}
+
+type ExecutionDoneRequest struct {
+	Execution            *Execution `protobuf:"bytes,1,opt,name=execution,proto3" json:"execution,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
+}
+
 func (m *ExecutionDoneRequest) Reset()         { *m = ExecutionDoneRequest{} }
 func (m *ExecutionDoneRequest) String() string { return proto.CompactTextString(m) }
 func (*ExecutionDoneRequest) ProtoMessage()    {}
 func (*ExecutionDoneRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dkron_53e25a55b3cc2668, []int{2}
+	return fileDescriptor_1f0292872e9433f8, []int{9}
 }
+
 func (m *ExecutionDoneRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ExecutionDoneRequest.Unmarshal(m, b)
 }
 func (m *ExecutionDoneRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ExecutionDoneRequest.Marshal(b, m, deterministic)
 }
-func (dst *ExecutionDoneRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ExecutionDoneRequest.Merge(dst, src)
+func (m *ExecutionDoneRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ExecutionDoneRequest.Merge(m, src)
 }
 func (m *ExecutionDoneRequest) XXX_Size() int {
 	return xxx_messageInfo_ExecutionDoneRequest.Size(m)
@@ -259,58 +680,9 @@ func (m *ExecutionDoneRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ExecutionDoneRequest proto.InternalMessageInfo
 
-func (m *ExecutionDoneRequest) GetJobName() string {
+func (m *ExecutionDoneRequest) GetExecution() *Execution {
 	if m != nil {
-		return m.JobName
-	}
-	return ""
-}
-
-func (m *ExecutionDoneRequest) GetSuccess() bool {
-	if m != nil {
-		return m.Success
-	}
-	return false
-}
-
-func (m *ExecutionDoneRequest) GetOutput() []byte {
-	if m != nil {
-		return m.Output
-	}
-	return nil
-}
-
-func (m *ExecutionDoneRequest) GetNodeName() string {
-	if m != nil {
-		return m.NodeName
-	}
-	return ""
-}
-
-func (m *ExecutionDoneRequest) GetGroup() int64 {
-	if m != nil {
-		return m.Group
-	}
-	return 0
-}
-
-func (m *ExecutionDoneRequest) GetAttempt() uint32 {
-	if m != nil {
-		return m.Attempt
-	}
-	return 0
-}
-
-func (m *ExecutionDoneRequest) GetStartedAt() *timestamp.Timestamp {
-	if m != nil {
-		return m.StartedAt
-	}
-	return nil
-}
-
-func (m *ExecutionDoneRequest) GetFinishedAt() *timestamp.Timestamp {
-	if m != nil {
-		return m.FinishedAt
+		return m.Execution
 	}
 	return nil
 }
@@ -327,16 +699,17 @@ func (m *ExecutionDoneResponse) Reset()         { *m = ExecutionDoneResponse{} }
 func (m *ExecutionDoneResponse) String() string { return proto.CompactTextString(m) }
 func (*ExecutionDoneResponse) ProtoMessage()    {}
 func (*ExecutionDoneResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dkron_53e25a55b3cc2668, []int{3}
+	return fileDescriptor_1f0292872e9433f8, []int{10}
 }
+
 func (m *ExecutionDoneResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ExecutionDoneResponse.Unmarshal(m, b)
 }
 func (m *ExecutionDoneResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ExecutionDoneResponse.Marshal(b, m, deterministic)
 }
-func (dst *ExecutionDoneResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ExecutionDoneResponse.Merge(dst, src)
+func (m *ExecutionDoneResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ExecutionDoneResponse.Merge(m, src)
 }
 func (m *ExecutionDoneResponse) XXX_Size() int {
 	return xxx_messageInfo_ExecutionDoneResponse.Size(m)
@@ -361,13 +734,475 @@ func (m *ExecutionDoneResponse) GetPayload() []byte {
 	return nil
 }
 
+type Executions struct {
+	Executions           []*Execution `protobuf:"bytes,1,rep,name=executions,proto3" json:"executions,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *Executions) Reset()         { *m = Executions{} }
+func (m *Executions) String() string { return proto.CompactTextString(m) }
+func (*Executions) ProtoMessage()    {}
+func (*Executions) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{11}
+}
+
+func (m *Executions) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Executions.Unmarshal(m, b)
+}
+func (m *Executions) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Executions.Marshal(b, m, deterministic)
+}
+func (m *Executions) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Executions.Merge(m, src)
+}
+func (m *Executions) XXX_Size() int {
+	return xxx_messageInfo_Executions.Size(m)
+}
+func (m *Executions) XXX_DiscardUnknown() {
+	xxx_messageInfo_Executions.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Executions proto.InternalMessageInfo
+
+func (m *Executions) GetExecutions() []*Execution {
+	if m != nil {
+		return m.Executions
+	}
+	return nil
+}
+
+type RunJobRequest struct {
+	JobName              string   `protobuf:"bytes,1,opt,name=job_name,json=jobName,proto3" json:"job_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RunJobRequest) Reset()         { *m = RunJobRequest{} }
+func (m *RunJobRequest) String() string { return proto.CompactTextString(m) }
+func (*RunJobRequest) ProtoMessage()    {}
+func (*RunJobRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{12}
+}
+
+func (m *RunJobRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RunJobRequest.Unmarshal(m, b)
+}
+func (m *RunJobRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RunJobRequest.Marshal(b, m, deterministic)
+}
+func (m *RunJobRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RunJobRequest.Merge(m, src)
+}
+func (m *RunJobRequest) XXX_Size() int {
+	return xxx_messageInfo_RunJobRequest.Size(m)
+}
+func (m *RunJobRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RunJobRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RunJobRequest proto.InternalMessageInfo
+
+func (m *RunJobRequest) GetJobName() string {
+	if m != nil {
+		return m.JobName
+	}
+	return ""
+}
+
+type RunJobResponse struct {
+	Job                  *Job     `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RunJobResponse) Reset()         { *m = RunJobResponse{} }
+func (m *RunJobResponse) String() string { return proto.CompactTextString(m) }
+func (*RunJobResponse) ProtoMessage()    {}
+func (*RunJobResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{13}
+}
+
+func (m *RunJobResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RunJobResponse.Unmarshal(m, b)
+}
+func (m *RunJobResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RunJobResponse.Marshal(b, m, deterministic)
+}
+func (m *RunJobResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RunJobResponse.Merge(m, src)
+}
+func (m *RunJobResponse) XXX_Size() int {
+	return xxx_messageInfo_RunJobResponse.Size(m)
+}
+func (m *RunJobResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_RunJobResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RunJobResponse proto.InternalMessageInfo
+
+func (m *RunJobResponse) GetJob() *Job {
+	if m != nil {
+		return m.Job
+	}
+	return nil
+}
+
+type ToggleJobRequest struct {
+	JobName              string   `protobuf:"bytes,1,opt,name=job_name,json=jobName,proto3" json:"job_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ToggleJobRequest) Reset()         { *m = ToggleJobRequest{} }
+func (m *ToggleJobRequest) String() string { return proto.CompactTextString(m) }
+func (*ToggleJobRequest) ProtoMessage()    {}
+func (*ToggleJobRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{14}
+}
+
+func (m *ToggleJobRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ToggleJobRequest.Unmarshal(m, b)
+}
+func (m *ToggleJobRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ToggleJobRequest.Marshal(b, m, deterministic)
+}
+func (m *ToggleJobRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ToggleJobRequest.Merge(m, src)
+}
+func (m *ToggleJobRequest) XXX_Size() int {
+	return xxx_messageInfo_ToggleJobRequest.Size(m)
+}
+func (m *ToggleJobRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ToggleJobRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ToggleJobRequest proto.InternalMessageInfo
+
+func (m *ToggleJobRequest) GetJobName() string {
+	if m != nil {
+		return m.JobName
+	}
+	return ""
+}
+
+type ToggleJobResponse struct {
+	Job                  *Job     `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ToggleJobResponse) Reset()         { *m = ToggleJobResponse{} }
+func (m *ToggleJobResponse) String() string { return proto.CompactTextString(m) }
+func (*ToggleJobResponse) ProtoMessage()    {}
+func (*ToggleJobResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{15}
+}
+
+func (m *ToggleJobResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ToggleJobResponse.Unmarshal(m, b)
+}
+func (m *ToggleJobResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ToggleJobResponse.Marshal(b, m, deterministic)
+}
+func (m *ToggleJobResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ToggleJobResponse.Merge(m, src)
+}
+func (m *ToggleJobResponse) XXX_Size() int {
+	return xxx_messageInfo_ToggleJobResponse.Size(m)
+}
+func (m *ToggleJobResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ToggleJobResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ToggleJobResponse proto.InternalMessageInfo
+
+func (m *ToggleJobResponse) GetJob() *Job {
+	if m != nil {
+		return m.Job
+	}
+	return nil
+}
+
+type RaftServer struct {
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Node                 string   `protobuf:"bytes,2,opt,name=node,proto3" json:"node,omitempty"`
+	Address              string   `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
+	Leader               bool     `protobuf:"varint,4,opt,name=leader,proto3" json:"leader,omitempty"`
+	Voter                bool     `protobuf:"varint,5,opt,name=voter,proto3" json:"voter,omitempty"`
+	RaftProtocol         string   `protobuf:"bytes,6,opt,name=raft_protocol,json=raftProtocol,proto3" json:"raft_protocol,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RaftServer) Reset()         { *m = RaftServer{} }
+func (m *RaftServer) String() string { return proto.CompactTextString(m) }
+func (*RaftServer) ProtoMessage()    {}
+func (*RaftServer) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{16}
+}
+
+func (m *RaftServer) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RaftServer.Unmarshal(m, b)
+}
+func (m *RaftServer) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RaftServer.Marshal(b, m, deterministic)
+}
+func (m *RaftServer) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RaftServer.Merge(m, src)
+}
+func (m *RaftServer) XXX_Size() int {
+	return xxx_messageInfo_RaftServer.Size(m)
+}
+func (m *RaftServer) XXX_DiscardUnknown() {
+	xxx_messageInfo_RaftServer.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RaftServer proto.InternalMessageInfo
+
+func (m *RaftServer) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *RaftServer) GetNode() string {
+	if m != nil {
+		return m.Node
+	}
+	return ""
+}
+
+func (m *RaftServer) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *RaftServer) GetLeader() bool {
+	if m != nil {
+		return m.Leader
+	}
+	return false
+}
+
+func (m *RaftServer) GetVoter() bool {
+	if m != nil {
+		return m.Voter
+	}
+	return false
+}
+
+func (m *RaftServer) GetRaftProtocol() string {
+	if m != nil {
+		return m.RaftProtocol
+	}
+	return ""
+}
+
+type RaftGetConfigurationResponse struct {
+	Servers              []*RaftServer `protobuf:"bytes,1,rep,name=servers,proto3" json:"servers,omitempty"`
+	Index                uint64        `protobuf:"varint,2,opt,name=index,proto3" json:"index,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
+}
+
+func (m *RaftGetConfigurationResponse) Reset()         { *m = RaftGetConfigurationResponse{} }
+func (m *RaftGetConfigurationResponse) String() string { return proto.CompactTextString(m) }
+func (*RaftGetConfigurationResponse) ProtoMessage()    {}
+func (*RaftGetConfigurationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{17}
+}
+
+func (m *RaftGetConfigurationResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RaftGetConfigurationResponse.Unmarshal(m, b)
+}
+func (m *RaftGetConfigurationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RaftGetConfigurationResponse.Marshal(b, m, deterministic)
+}
+func (m *RaftGetConfigurationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RaftGetConfigurationResponse.Merge(m, src)
+}
+func (m *RaftGetConfigurationResponse) XXX_Size() int {
+	return xxx_messageInfo_RaftGetConfigurationResponse.Size(m)
+}
+func (m *RaftGetConfigurationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_RaftGetConfigurationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RaftGetConfigurationResponse proto.InternalMessageInfo
+
+func (m *RaftGetConfigurationResponse) GetServers() []*RaftServer {
+	if m != nil {
+		return m.Servers
+	}
+	return nil
+}
+
+func (m *RaftGetConfigurationResponse) GetIndex() uint64 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+
+type RaftRemovePeerByIDRequest struct {
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RaftRemovePeerByIDRequest) Reset()         { *m = RaftRemovePeerByIDRequest{} }
+func (m *RaftRemovePeerByIDRequest) String() string { return proto.CompactTextString(m) }
+func (*RaftRemovePeerByIDRequest) ProtoMessage()    {}
+func (*RaftRemovePeerByIDRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f0292872e9433f8, []int{18}
+}
+
+func (m *RaftRemovePeerByIDRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RaftRemovePeerByIDRequest.Unmarshal(m, b)
+}
+func (m *RaftRemovePeerByIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RaftRemovePeerByIDRequest.Marshal(b, m, deterministic)
+}
+func (m *RaftRemovePeerByIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RaftRemovePeerByIDRequest.Merge(m, src)
+}
+func (m *RaftRemovePeerByIDRequest) XXX_Size() int {
+	return xxx_messageInfo_RaftRemovePeerByIDRequest.Size(m)
+}
+func (m *RaftRemovePeerByIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RaftRemovePeerByIDRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RaftRemovePeerByIDRequest proto.InternalMessageInfo
+
+func (m *RaftRemovePeerByIDRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
 func init() {
+	proto.RegisterType((*Job)(nil), "proto.Job")
+	proto.RegisterMapType((map[string]string)(nil), "proto.Job.ExecutorConfigEntry")
+	proto.RegisterMapType((map[string]string)(nil), "proto.Job.MetadataEntry")
+	proto.RegisterMapType((map[string]*PluginConfig)(nil), "proto.Job.ProcessorsEntry")
+	proto.RegisterMapType((map[string]string)(nil), "proto.Job.TagsEntry")
+	proto.RegisterType((*Job_NullableTime)(nil), "proto.Job.NullableTime")
+	proto.RegisterType((*PluginConfig)(nil), "proto.PluginConfig")
+	proto.RegisterMapType((map[string]string)(nil), "proto.PluginConfig.ConfigEntry")
+	proto.RegisterType((*SetJobRequest)(nil), "proto.SetJobRequest")
+	proto.RegisterType((*SetJobResponse)(nil), "proto.SetJobResponse")
+	proto.RegisterType((*DeleteJobRequest)(nil), "proto.DeleteJobRequest")
+	proto.RegisterType((*DeleteJobResponse)(nil), "proto.DeleteJobResponse")
 	proto.RegisterType((*GetJobRequest)(nil), "proto.GetJobRequest")
 	proto.RegisterType((*GetJobResponse)(nil), "proto.GetJobResponse")
-	proto.RegisterMapType((map[string]string)(nil), "proto.GetJobResponse.ExecutorConfigEntry")
-	proto.RegisterMapType((map[string]string)(nil), "proto.GetJobResponse.TagsEntry")
+	proto.RegisterType((*Execution)(nil), "proto.Execution")
 	proto.RegisterType((*ExecutionDoneRequest)(nil), "proto.ExecutionDoneRequest")
 	proto.RegisterType((*ExecutionDoneResponse)(nil), "proto.ExecutionDoneResponse")
+	proto.RegisterType((*Executions)(nil), "proto.Executions")
+	proto.RegisterType((*RunJobRequest)(nil), "proto.RunJobRequest")
+	proto.RegisterType((*RunJobResponse)(nil), "proto.RunJobResponse")
+	proto.RegisterType((*ToggleJobRequest)(nil), "proto.ToggleJobRequest")
+	proto.RegisterType((*ToggleJobResponse)(nil), "proto.ToggleJobResponse")
+	proto.RegisterType((*RaftServer)(nil), "proto.RaftServer")
+	proto.RegisterType((*RaftGetConfigurationResponse)(nil), "proto.RaftGetConfigurationResponse")
+	proto.RegisterType((*RaftRemovePeerByIDRequest)(nil), "proto.RaftRemovePeerByIDRequest")
+}
+
+func init() { proto.RegisterFile("dkron.proto", fileDescriptor_1f0292872e9433f8) }
+
+var fileDescriptor_1f0292872e9433f8 = []byte{
+	// 1228 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0x6d, 0x6f, 0x13, 0xc7,
+	0x13, 0xd7, 0xc5, 0x76, 0xe2, 0x1b, 0xdb, 0x21, 0x2c, 0x01, 0x96, 0x0b, 0xff, 0x3f, 0x96, 0x51,
+	0x25, 0xb7, 0x08, 0xd3, 0xa6, 0xa5, 0x14, 0x90, 0x90, 0x28, 0x71, 0xa3, 0x46, 0x2d, 0x8a, 0xce,
+	0x51, 0xdf, 0xf4, 0x85, 0xb5, 0xf6, 0x8d, 0x9d, 0x83, 0xf3, 0xad, 0xbb, 0xbb, 0x97, 0xe2, 0xbe,
+	0xec, 0xf7, 0xe8, 0xc7, 0xe8, 0x57, 0xe9, 0xe7, 0xa9, 0xf6, 0xe1, 0x8e, 0xb3, 0xe3, 0x84, 0xa4,
+	0xaf, 0x7c, 0x33, 0xf3, 0xdb, 0xd9, 0x79, 0xf8, 0xcd, 0x78, 0xa1, 0x11, 0xbd, 0x17, 0x3c, 0xed,
+	0xcd, 0x05, 0x57, 0x9c, 0xd4, 0xcc, 0x4f, 0xf0, 0x60, 0xca, 0xf9, 0x34, 0xc1, 0x27, 0x46, 0x1a,
+	0x65, 0x93, 0x27, 0x2a, 0x9e, 0xa1, 0x54, 0x6c, 0x36, 0xb7, 0xb8, 0x60, 0x6f, 0x15, 0x80, 0xb3,
+	0xb9, 0x5a, 0x58, 0x63, 0xe7, 0x6f, 0x1f, 0x2a, 0x47, 0x7c, 0x44, 0x08, 0x54, 0x53, 0x36, 0x43,
+	0xea, 0xb5, 0xbd, 0xae, 0x1f, 0x9a, 0x6f, 0x12, 0x40, 0x5d, 0xfb, 0xfa, 0x83, 0xa7, 0x48, 0x37,
+	0x8c, 0xbe, 0x90, 0xb5, 0x4d, 0x8e, 0x4f, 0x31, 0xca, 0x12, 0xa4, 0x15, 0x6b, 0xcb, 0x65, 0xb2,
+	0x0b, 0x35, 0xfe, 0x7b, 0x8a, 0x82, 0x6e, 0x19, 0x83, 0x15, 0xc8, 0x03, 0x68, 0x98, 0x8f, 0x21,
+	0xce, 0x58, 0x9c, 0xd0, 0xba, 0xb1, 0x81, 0x51, 0xf5, 0xb5, 0x86, 0x3c, 0x84, 0x96, 0xcc, 0xc6,
+	0x63, 0x94, 0x72, 0x38, 0xe6, 0x59, 0xaa, 0xa8, 0xdf, 0xf6, 0xba, 0xb5, 0xb0, 0xe9, 0x94, 0x6f,
+	0xb4, 0x4e, 0x7b, 0x41, 0x21, 0xb8, 0x70, 0x10, 0x30, 0x10, 0x30, 0x2a, 0x0b, 0x08, 0xa0, 0x1e,
+	0xc5, 0x92, 0x8d, 0x12, 0x8c, 0x68, 0xa3, 0xed, 0x75, 0xeb, 0x61, 0x21, 0x93, 0x2e, 0x54, 0x15,
+	0x9b, 0x4a, 0xda, 0x6c, 0x57, 0xba, 0x8d, 0xfd, 0x5d, 0x5b, 0x82, 0xde, 0x11, 0x1f, 0xf5, 0x4e,
+	0xd8, 0x54, 0xf6, 0x53, 0x25, 0x16, 0xa1, 0x41, 0x10, 0x0a, 0x5b, 0x02, 0x95, 0x88, 0x51, 0xd2,
+	0x56, 0xdb, 0xeb, 0xb6, 0xc2, 0x5c, 0x24, 0x9f, 0xc1, 0x76, 0x84, 0x73, 0x4c, 0x23, 0x4c, 0xd5,
+	0xf0, 0x1d, 0x1f, 0x49, 0xba, 0xdd, 0xae, 0x74, 0xfd, 0xb0, 0x55, 0x68, 0x8f, 0xf8, 0x48, 0x92,
+	0xff, 0x01, 0xcc, 0x99, 0x70, 0x18, 0x7a, 0xc3, 0x24, 0xeb, 0x5b, 0x8d, 0x2e, 0x77, 0x1b, 0x1a,
+	0x63, 0x9e, 0x8e, 0x33, 0x21, 0x30, 0x1d, 0x2f, 0xe8, 0x8e, 0xb1, 0x97, 0x55, 0x3a, 0x0f, 0xfc,
+	0x80, 0xe3, 0x4c, 0x71, 0x41, 0x6f, 0xda, 0x02, 0xe7, 0x32, 0x39, 0x84, 0x1b, 0xf9, 0xf7, 0x70,
+	0xcc, 0xd3, 0x49, 0x3c, 0xa5, 0xc4, 0xa4, 0xf4, 0xff, 0x52, 0x4a, 0x7d, 0x87, 0x78, 0x63, 0x00,
+	0x36, 0xb9, 0x6d, 0x5c, 0x52, 0x92, 0x3b, 0xb0, 0x29, 0x15, 0x53, 0x99, 0xa4, 0xb7, 0xcc, 0x15,
+	0x4e, 0x22, 0xdf, 0x40, 0x7d, 0x86, 0x8a, 0x45, 0x4c, 0x31, 0xba, 0x6b, 0x3c, 0xd3, 0x92, 0xe7,
+	0x9f, 0x9d, 0xc9, 0xfa, 0x2c, 0x90, 0xe4, 0x05, 0x34, 0x13, 0x26, 0xd5, 0xd0, 0x35, 0x8c, 0xde,
+	0x6b, 0x7b, 0xdd, 0xc6, 0xfe, 0xdd, 0xd2, 0xc9, 0xb7, 0x59, 0x92, 0xe8, 0x56, 0x9c, 0xc4, 0x33,
+	0x0c, 0x1b, 0x1a, 0x3c, 0xb0, 0x58, 0xf2, 0x2d, 0x80, 0x39, 0x6b, 0x3a, 0x49, 0x83, 0xcb, 0x4f,
+	0xfa, 0x1a, 0xda, 0xd7, 0x48, 0xd2, 0x83, 0x6a, 0x8a, 0x1f, 0x14, 0xbd, 0x6b, 0x4e, 0x04, 0x3d,
+	0xcb, 0xf5, 0x5e, 0xce, 0xf5, 0xde, 0x49, 0x3e, 0x0c, 0xa1, 0xc1, 0xe9, 0xc2, 0x47, 0xb1, 0x9c,
+	0x27, 0x6c, 0x61, 0xe8, 0x4e, 0x6d, 0xe1, 0x4b, 0x2a, 0xf2, 0x02, 0x60, 0x2e, 0xb8, 0x0e, 0x8a,
+	0x0b, 0x49, 0xf7, 0x4c, 0xf6, 0x41, 0x29, 0x92, 0xe3, 0xc2, 0x68, 0xf3, 0x2f, 0xa1, 0x83, 0x67,
+	0xe0, 0x17, 0x4c, 0x22, 0x3b, 0x50, 0x79, 0x8f, 0x0b, 0x37, 0x51, 0xfa, 0x53, 0x0f, 0xc6, 0x19,
+	0x4b, 0xb2, 0x7c, 0x9a, 0xac, 0xf0, 0x62, 0xe3, 0x3b, 0x2f, 0x78, 0x0d, 0xb7, 0xd6, 0xf4, 0xeb,
+	0x5a, 0x2e, 0x5e, 0x42, 0x6b, 0xa9, 0x31, 0xd7, 0x3a, 0xfc, 0x2b, 0x34, 0xcb, 0x15, 0x26, 0x7b,
+	0xe0, 0x9f, 0x32, 0x39, 0xb4, 0x68, 0xcf, 0x8e, 0xd1, 0x29, 0x93, 0xbf, 0x68, 0x59, 0xd7, 0x5c,
+	0xef, 0x01, 0xe3, 0xe5, 0x13, 0x35, 0xd7, 0xb8, 0x20, 0x84, 0x1b, 0x2b, 0x45, 0x5b, 0x13, 0xdb,
+	0xe7, 0xe5, 0xd8, 0x1a, 0xfb, 0xb7, 0x5c, 0xc5, 0x8f, 0x93, 0x6c, 0x1a, 0xa7, 0xb6, 0x26, 0xa5,
+	0x80, 0x3b, 0x7f, 0x7a, 0xd0, 0x2c, 0xdb, 0xc8, 0x33, 0xd8, 0x74, 0xa3, 0xe0, 0x99, 0x96, 0x3d,
+	0x58, 0xe3, 0xa0, 0x57, 0x9e, 0x05, 0x07, 0x0f, 0x9e, 0x43, 0xe3, 0x3f, 0x96, 0xbc, 0xf3, 0x18,
+	0x5a, 0x03, 0xd4, 0xf3, 0x1c, 0xe2, 0x6f, 0x19, 0x4a, 0x45, 0xee, 0x43, 0x45, 0x8f, 0xbb, 0x67,
+	0x52, 0x80, 0x8f, 0xa4, 0x09, 0xb5, 0xba, 0xd3, 0x83, 0xed, 0x1c, 0x2e, 0xe7, 0x3c, 0x95, 0xf8,
+	0x09, 0xfc, 0x63, 0xd8, 0x39, 0xc0, 0x04, 0x15, 0x96, 0x6e, 0xb8, 0x07, 0xf5, 0x77, 0x7c, 0x34,
+	0x2c, 0xed, 0xea, 0xad, 0x77, 0x7c, 0xf4, 0x96, 0xcd, 0xb0, 0xf3, 0x15, 0xdc, 0x2c, 0xc1, 0xaf,
+	0x74, 0xc3, 0x17, 0xd0, 0x3a, 0x5c, 0x4a, 0xe0, 0x12, 0xf7, 0x3d, 0xd8, 0x3e, 0xbc, 0x4e, 0xf4,
+	0x7f, 0x6d, 0x80, 0x6f, 0x39, 0x1d, 0xf3, 0xf4, 0x12, 0xc7, 0x7a, 0xd7, 0xe6, 0x1b, 0x63, 0xc3,
+	0x30, 0x2d, 0x17, 0xf5, 0x7a, 0xe2, 0x99, 0x9a, 0x67, 0xca, 0xfc, 0xc5, 0x34, 0x43, 0x27, 0x69,
+	0x76, 0xa6, 0x3c, 0x42, 0xeb, 0xad, 0x6a, 0x97, 0xa3, 0x56, 0x18, 0x77, 0xbb, 0x50, 0x9b, 0x0a,
+	0x9e, 0xcd, 0x69, 0xad, 0xed, 0x75, 0x2b, 0xa1, 0x15, 0xf4, 0x25, 0x4c, 0x29, 0xfd, 0xcf, 0x47,
+	0x37, 0xed, 0x42, 0x77, 0x22, 0x79, 0x0e, 0x20, 0x15, 0x13, 0x0a, 0xa3, 0x21, 0x53, 0xe6, 0x2f,
+	0xeb, 0x72, 0x4e, 0xfb, 0x0e, 0xfd, 0x5a, 0x91, 0x97, 0xd0, 0x98, 0xc4, 0x69, 0x2c, 0x4f, 0xed,
+	0xd9, 0xfa, 0x27, 0xcf, 0x42, 0x0e, 0x7f, 0xad, 0x3a, 0x3f, 0xc0, 0x6e, 0x51, 0x9e, 0x03, 0x9e,
+	0x62, 0xde, 0x82, 0x1e, 0xf8, 0x98, 0xeb, 0x5d, 0x6d, 0x77, 0x5c, 0x6d, 0x0b, 0x7c, 0xf8, 0x11,
+	0xd2, 0xe9, 0xc3, 0xed, 0x15, 0x3f, 0xae, 0x3d, 0x04, 0xaa, 0x13, 0xc1, 0x67, 0xf9, 0x5f, 0xba,
+	0xfe, 0xd6, 0x65, 0x98, 0xb3, 0x45, 0xc2, 0x59, 0x64, 0x6a, 0xdd, 0x0c, 0x73, 0xb1, 0xf3, 0x0a,
+	0xa0, 0x70, 0x23, 0xc9, 0x97, 0x00, 0xc5, 0x0d, 0xd2, 0x4d, 0xd4, 0xf9, 0x28, 0x4a, 0x18, 0x4d,
+	0xa5, 0x30, 0x4b, 0xaf, 0x4c, 0xa5, 0x1c, 0x7b, 0xd5, 0x41, 0x38, 0xe1, 0xd3, 0x69, 0x72, 0xf5,
+	0x41, 0x28, 0xc1, 0xaf, 0x46, 0x56, 0x0f, 0x20, 0x64, 0x13, 0x35, 0x40, 0x71, 0x86, 0x82, 0x6c,
+	0xc3, 0x46, 0x1c, 0x39, 0xb7, 0x1b, 0x71, 0x64, 0x5e, 0x47, 0x3c, 0xca, 0x37, 0x80, 0xf9, 0x36,
+	0x8c, 0x8a, 0x22, 0xa1, 0x69, 0x6b, 0x1f, 0x40, 0xb9, 0xa8, 0x69, 0x9b, 0x20, 0x8b, 0x50, 0x18,
+	0x6e, 0xd6, 0x43, 0x27, 0x99, 0x45, 0xc2, 0x15, 0x0a, 0xc3, 0xcc, 0x7a, 0x68, 0x05, 0xfd, 0xec,
+	0x11, 0x6c, 0xa2, 0x86, 0x26, 0xa2, 0x31, 0x4f, 0x0c, 0x3f, 0xfd, 0xb0, 0xa9, 0x95, 0xc7, 0x4e,
+	0xd7, 0x61, 0x70, 0x5f, 0x87, 0x77, 0x88, 0xca, 0xee, 0xaa, 0x4c, 0x30, 0xd3, 0x81, 0x3c, 0xbb,
+	0x47, 0xb0, 0x25, 0x4d, 0xe8, 0x79, 0xb3, 0x6e, 0xba, 0x0c, 0x3f, 0x26, 0x15, 0xe6, 0x08, 0x1d,
+	0x47, 0x9c, 0x46, 0xf8, 0xc1, 0xa4, 0x53, 0x0d, 0xad, 0xd0, 0x79, 0x04, 0xf7, 0x34, 0x38, 0xc4,
+	0x19, 0x3f, 0xc3, 0x63, 0x44, 0xf1, 0xfd, 0xe2, 0xc7, 0x83, 0xbc, 0xda, 0x2b, 0x05, 0xd9, 0xff,
+	0xa7, 0x0a, 0xb5, 0x03, 0xfd, 0x16, 0x25, 0x4f, 0x61, 0xd3, 0xae, 0x05, 0x92, 0xbf, 0xa7, 0x96,
+	0x36, 0x4a, 0x70, 0x7b, 0x45, 0xeb, 0x02, 0x3e, 0x82, 0xd6, 0x12, 0x6b, 0xc9, 0xde, 0x2a, 0xbb,
+	0x4a, 0x33, 0x11, 0xdc, 0x5f, 0x6f, 0x74, 0xbe, 0x9e, 0x41, 0xed, 0x27, 0x64, 0x67, 0x48, 0xee,
+	0x9c, 0x1b, 0xbd, 0xbe, 0x7e, 0xea, 0x06, 0x17, 0xe8, 0x75, 0xec, 0x83, 0xe5, 0xd8, 0x07, 0x6b,
+	0x63, 0x5f, 0xd9, 0xda, 0xaf, 0xc0, 0x2f, 0x16, 0x2d, 0xc9, 0x1f, 0x29, 0xab, 0x9b, 0x3a, 0xa0,
+	0xe7, 0x0d, 0xee, 0xfc, 0x53, 0xd8, 0xb4, 0xf4, 0x2f, 0xae, 0x5d, 0x9a, 0x9c, 0xe2, 0xda, 0x95,
+	0x19, 0x79, 0x05, 0x7e, 0x41, 0xeb, 0xe2, 0xda, 0xd5, 0xb9, 0x28, 0xae, 0x3d, 0x3f, 0x01, 0x03,
+	0xd8, 0x5d, 0xc7, 0xa1, 0x0b, 0xab, 0xf6, 0xb0, 0x44, 0xa1, 0x0b, 0x89, 0xf7, 0x16, 0xc8, 0x79,
+	0xd6, 0x90, 0x76, 0xe9, 0xe8, 0x5a, 0x42, 0x5d, 0xd4, 0x92, 0xd1, 0xa6, 0x91, 0xbf, 0xfe, 0x37,
+	0x00, 0x00, 0xff, 0xff, 0xbc, 0x95, 0x68, 0xf0, 0xea, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -385,6 +1220,12 @@ type DkronClient interface {
 	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error)
 	ExecutionDone(ctx context.Context, in *ExecutionDoneRequest, opts ...grpc.CallOption) (*ExecutionDoneResponse, error)
 	Leave(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
+	SetJob(ctx context.Context, in *SetJobRequest, opts ...grpc.CallOption) (*SetJobResponse, error)
+	DeleteJob(ctx context.Context, in *DeleteJobRequest, opts ...grpc.CallOption) (*DeleteJobResponse, error)
+	RunJob(ctx context.Context, in *RunJobRequest, opts ...grpc.CallOption) (*RunJobResponse, error)
+	ToggleJob(ctx context.Context, in *ToggleJobRequest, opts ...grpc.CallOption) (*ToggleJobResponse, error)
+	RaftGetConfiguration(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*RaftGetConfigurationResponse, error)
+	RaftRemovePeerByID(ctx context.Context, in *RaftRemovePeerByIDRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type dkronClient struct {
@@ -422,11 +1263,103 @@ func (c *dkronClient) Leave(ctx context.Context, in *empty.Empty, opts ...grpc.C
 	return out, nil
 }
 
+func (c *dkronClient) SetJob(ctx context.Context, in *SetJobRequest, opts ...grpc.CallOption) (*SetJobResponse, error) {
+	out := new(SetJobResponse)
+	err := c.cc.Invoke(ctx, "/proto.Dkron/SetJob", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dkronClient) DeleteJob(ctx context.Context, in *DeleteJobRequest, opts ...grpc.CallOption) (*DeleteJobResponse, error) {
+	out := new(DeleteJobResponse)
+	err := c.cc.Invoke(ctx, "/proto.Dkron/DeleteJob", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dkronClient) RunJob(ctx context.Context, in *RunJobRequest, opts ...grpc.CallOption) (*RunJobResponse, error) {
+	out := new(RunJobResponse)
+	err := c.cc.Invoke(ctx, "/proto.Dkron/RunJob", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dkronClient) ToggleJob(ctx context.Context, in *ToggleJobRequest, opts ...grpc.CallOption) (*ToggleJobResponse, error) {
+	out := new(ToggleJobResponse)
+	err := c.cc.Invoke(ctx, "/proto.Dkron/ToggleJob", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dkronClient) RaftGetConfiguration(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*RaftGetConfigurationResponse, error) {
+	out := new(RaftGetConfigurationResponse)
+	err := c.cc.Invoke(ctx, "/proto.Dkron/RaftGetConfiguration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dkronClient) RaftRemovePeerByID(ctx context.Context, in *RaftRemovePeerByIDRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.Dkron/RaftRemovePeerByID", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DkronServer is the server API for Dkron service.
 type DkronServer interface {
 	GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error)
 	ExecutionDone(context.Context, *ExecutionDoneRequest) (*ExecutionDoneResponse, error)
 	Leave(context.Context, *empty.Empty) (*empty.Empty, error)
+	SetJob(context.Context, *SetJobRequest) (*SetJobResponse, error)
+	DeleteJob(context.Context, *DeleteJobRequest) (*DeleteJobResponse, error)
+	RunJob(context.Context, *RunJobRequest) (*RunJobResponse, error)
+	ToggleJob(context.Context, *ToggleJobRequest) (*ToggleJobResponse, error)
+	RaftGetConfiguration(context.Context, *empty.Empty) (*RaftGetConfigurationResponse, error)
+	RaftRemovePeerByID(context.Context, *RaftRemovePeerByIDRequest) (*empty.Empty, error)
+}
+
+// UnimplementedDkronServer can be embedded to have forward compatible implementations.
+type UnimplementedDkronServer struct {
+}
+
+func (*UnimplementedDkronServer) GetJob(ctx context.Context, req *GetJobRequest) (*GetJobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetJob not implemented")
+}
+func (*UnimplementedDkronServer) ExecutionDone(ctx context.Context, req *ExecutionDoneRequest) (*ExecutionDoneResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecutionDone not implemented")
+}
+func (*UnimplementedDkronServer) Leave(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Leave not implemented")
+}
+func (*UnimplementedDkronServer) SetJob(ctx context.Context, req *SetJobRequest) (*SetJobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetJob not implemented")
+}
+func (*UnimplementedDkronServer) DeleteJob(ctx context.Context, req *DeleteJobRequest) (*DeleteJobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteJob not implemented")
+}
+func (*UnimplementedDkronServer) RunJob(ctx context.Context, req *RunJobRequest) (*RunJobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RunJob not implemented")
+}
+func (*UnimplementedDkronServer) ToggleJob(ctx context.Context, req *ToggleJobRequest) (*ToggleJobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ToggleJob not implemented")
+}
+func (*UnimplementedDkronServer) RaftGetConfiguration(ctx context.Context, req *empty.Empty) (*RaftGetConfigurationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RaftGetConfiguration not implemented")
+}
+func (*UnimplementedDkronServer) RaftRemovePeerByID(ctx context.Context, req *RaftRemovePeerByIDRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RaftRemovePeerByID not implemented")
 }
 
 func RegisterDkronServer(s *grpc.Server, srv DkronServer) {
@@ -487,6 +1420,114 @@ func _Dkron_Leave_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Dkron_SetJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DkronServer).SetJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Dkron/SetJob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DkronServer).SetJob(ctx, req.(*SetJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Dkron_DeleteJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DkronServer).DeleteJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Dkron/DeleteJob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DkronServer).DeleteJob(ctx, req.(*DeleteJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Dkron_RunJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RunJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DkronServer).RunJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Dkron/RunJob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DkronServer).RunJob(ctx, req.(*RunJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Dkron_ToggleJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ToggleJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DkronServer).ToggleJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Dkron/ToggleJob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DkronServer).ToggleJob(ctx, req.(*ToggleJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Dkron_RaftGetConfiguration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DkronServer).RaftGetConfiguration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Dkron/RaftGetConfiguration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DkronServer).RaftGetConfiguration(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Dkron_RaftRemovePeerByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RaftRemovePeerByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DkronServer).RaftRemovePeerByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Dkron/RaftRemovePeerByID",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DkronServer).RaftRemovePeerByID(ctx, req.(*RaftRemovePeerByIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Dkron_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "proto.Dkron",
 	HandlerType: (*DkronServer)(nil),
@@ -503,55 +1544,31 @@ var _Dkron_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Leave",
 			Handler:    _Dkron_Leave_Handler,
 		},
+		{
+			MethodName: "SetJob",
+			Handler:    _Dkron_SetJob_Handler,
+		},
+		{
+			MethodName: "DeleteJob",
+			Handler:    _Dkron_DeleteJob_Handler,
+		},
+		{
+			MethodName: "RunJob",
+			Handler:    _Dkron_RunJob_Handler,
+		},
+		{
+			MethodName: "ToggleJob",
+			Handler:    _Dkron_ToggleJob_Handler,
+		},
+		{
+			MethodName: "RaftGetConfiguration",
+			Handler:    _Dkron_RaftGetConfiguration_Handler,
+		},
+		{
+			MethodName: "RaftRemovePeerByID",
+			Handler:    _Dkron_RaftRemovePeerByID_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "dkron.proto",
-}
-
-func init() { proto.RegisterFile("dkron.proto", fileDescriptor_dkron_53e25a55b3cc2668) }
-
-var fileDescriptor_dkron_53e25a55b3cc2668 = []byte{
-	// 668 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0x5d, 0x4f, 0xdb, 0x30,
-	0x14, 0x55, 0x28, 0x29, 0xed, 0xed, 0x07, 0xcc, 0x14, 0xe4, 0x85, 0x4d, 0x44, 0x9d, 0x26, 0x75,
-	0x7b, 0x28, 0x12, 0x68, 0x62, 0x1f, 0x4f, 0x08, 0xaa, 0x49, 0xd5, 0xb4, 0x87, 0x88, 0xf7, 0xca,
-	0x49, 0x6e, 0x4b, 0xa0, 0xb5, 0x33, 0xdb, 0x61, 0xeb, 0x7e, 0xd1, 0x1e, 0xf7, 0x1f, 0xf6, 0xc7,
-	0x26, 0xdb, 0x49, 0x07, 0xac, 0x13, 0xda, 0x53, 0xef, 0x39, 0xf7, 0xf4, 0xda, 0xf7, 0xfa, 0xdc,
-	0x40, 0x2b, 0xbd, 0x91, 0x82, 0x0f, 0x73, 0x29, 0xb4, 0x20, 0xbe, 0xfd, 0x09, 0x0e, 0x67, 0x42,
-	0xcc, 0xe6, 0x78, 0x64, 0x51, 0x5c, 0x4c, 0x8f, 0x74, 0xb6, 0x40, 0xa5, 0xd9, 0x22, 0x77, 0xba,
-	0xe0, 0xe0, 0xa1, 0x00, 0x17, 0xb9, 0x5e, 0xba, 0x64, 0xff, 0x35, 0x74, 0x3e, 0xa2, 0x1e, 0x8b,
-	0x38, 0xc2, 0x2f, 0x05, 0x2a, 0x4d, 0x9e, 0x42, 0xe3, 0x5a, 0xc4, 0x13, 0xce, 0x16, 0x48, 0xbd,
-	0xd0, 0x1b, 0x34, 0xa3, 0xad, 0x6b, 0x11, 0x7f, 0x66, 0x0b, 0xec, 0xff, 0xf4, 0xa1, 0x5b, 0x89,
-	0x55, 0x2e, 0xb8, 0x42, 0x42, 0x60, 0xf3, 0x8e, 0xd2, 0xc6, 0x24, 0x80, 0x86, 0xb9, 0xc2, 0x77,
-	0xc1, 0x91, 0x6e, 0x58, 0x7e, 0x85, 0x4d, 0x4e, 0x25, 0x57, 0x98, 0x16, 0x73, 0xa4, 0x35, 0x97,
-	0xab, 0x30, 0xe9, 0x81, 0x2f, 0xbe, 0x72, 0x94, 0x74, 0xcb, 0x26, 0x1c, 0x20, 0x87, 0xd0, 0xb2,
-	0xc1, 0x04, 0x17, 0x2c, 0x9b, 0xd3, 0x86, 0xcd, 0x81, 0xa5, 0x46, 0x86, 0x21, 0x2f, 0xa0, 0xa3,
-	0x8a, 0x24, 0x41, 0xa5, 0x26, 0x89, 0x28, 0xb8, 0xa6, 0xcd, 0xd0, 0x1b, 0xf8, 0x51, 0xbb, 0x24,
-	0xcf, 0x0d, 0x67, 0xaa, 0xa0, 0x94, 0x42, 0x96, 0x12, 0xb0, 0x12, 0xb0, 0x94, 0x13, 0x04, 0xd0,
-	0x48, 0x33, 0xc5, 0xe2, 0x39, 0xa6, 0xb4, 0x15, 0x7a, 0x83, 0x46, 0xb4, 0xc2, 0xe4, 0x04, 0x36,
-	0x35, 0x9b, 0x29, 0xda, 0x0e, 0x6b, 0x83, 0xd6, 0xf1, 0xa1, 0x9b, 0xdc, 0xf0, 0xfe, 0x24, 0x86,
-	0x97, 0x6c, 0xa6, 0x46, 0x5c, 0xcb, 0x65, 0x64, 0xc5, 0x84, 0xc2, 0x96, 0x44, 0x2d, 0x33, 0x54,
-	0xb4, 0x13, 0x7a, 0x83, 0x4e, 0x54, 0x41, 0xf2, 0x12, 0xba, 0x29, 0xe6, 0xc8, 0x53, 0xe4, 0x7a,
-	0x72, 0x2d, 0x62, 0x45, 0xbb, 0x61, 0x6d, 0xd0, 0x8c, 0x3a, 0x2b, 0x76, 0x2c, 0x62, 0x45, 0x9e,
-	0x03, 0xe4, 0x4c, 0x96, 0x1a, 0xba, 0x6d, 0xfb, 0x6e, 0x3a, 0x66, 0x2c, 0x62, 0x12, 0x42, 0x2b,
-	0x11, 0x3c, 0x29, 0xa4, 0x44, 0x9e, 0x2c, 0xe9, 0x8e, 0xcd, 0xdf, 0xa5, 0x4c, 0x4b, 0xf8, 0x0d,
-	0x93, 0x42, 0x0b, 0x49, 0x9f, 0xb8, 0x59, 0x57, 0x98, 0x44, 0xb0, 0x5d, 0xc5, 0x93, 0x44, 0xf0,
-	0x69, 0x36, 0xa3, 0xc4, 0x76, 0xf7, 0x6a, 0x7d, 0x77, 0xa3, 0x52, 0x7c, 0x6e, 0xb5, 0xae, 0xcf,
-	0x2e, 0xde, 0x23, 0xc9, 0x3e, 0xd4, 0x95, 0x66, 0xba, 0x50, 0x74, 0xd7, 0x9e, 0x56, 0xa2, 0xe0,
-	0x14, 0x9a, 0xab, 0xe1, 0x90, 0x1d, 0xa8, 0xdd, 0xe0, 0xb2, 0xf4, 0x8b, 0x09, 0xcd, 0xb3, 0xdf,
-	0xb2, 0x79, 0x51, 0x79, 0xc5, 0x81, 0xf7, 0x1b, 0x6f, 0xbd, 0xe0, 0x0c, 0x76, 0xd7, 0x9c, 0xfb,
-	0x3f, 0x25, 0xfa, 0x3f, 0x36, 0xa0, 0xe7, 0x6a, 0x64, 0x82, 0x5f, 0x08, 0x8e, 0x8f, 0xdb, 0xdc,
-	0xbc, 0x5c, 0xe9, 0x1d, 0x5b, 0xaf, 0x11, 0x55, 0xd0, 0x74, 0x28, 0x0a, 0x9d, 0x17, 0xda, 0x7a,
-	0xb7, 0x1d, 0x95, 0x88, 0x1c, 0x40, 0x93, 0x8b, 0x14, 0x5d, 0xb5, 0x4d, 0x37, 0x6a, 0x43, 0xd8,
-	0x72, 0x3d, 0xf0, 0x67, 0x52, 0x14, 0x39, 0xf5, 0x43, 0x6f, 0x50, 0x8b, 0x1c, 0x30, 0x87, 0x30,
-	0xad, 0xcd, 0x26, 0xd2, 0xba, 0xb3, 0x47, 0x09, 0xc9, 0x3b, 0x00, 0xa5, 0x99, 0xd4, 0x98, 0x4e,
-	0x98, 0xb6, 0xbb, 0xd0, 0x3a, 0x0e, 0x86, 0x6e, 0x87, 0x87, 0xd5, 0x0e, 0x0f, 0x2f, 0xab, 0x25,
-	0x8f, 0x9a, 0xa5, 0xfa, 0x4c, 0x93, 0x0f, 0xd0, 0x9a, 0x66, 0x3c, 0x53, 0x57, 0xee, 0xbf, 0x8d,
-	0x47, 0xff, 0x0b, 0x95, 0xfc, 0x4c, 0xf7, 0x47, 0xb0, 0xf7, 0x60, 0x52, 0x7f, 0x76, 0x7c, 0x2a,
-	0xc5, 0xa2, 0xda, 0x71, 0x13, 0x9b, 0xeb, 0xe7, 0x6c, 0x39, 0x17, 0x2c, 0xb5, 0x33, 0x6a, 0x47,
-	0x15, 0x3c, 0xfe, 0xe5, 0x81, 0x7f, 0x61, 0xbe, 0x52, 0xe4, 0x0d, 0xd4, 0x9d, 0x8b, 0x48, 0xef,
-	0x81, 0xa9, 0xec, 0x13, 0x04, 0x7b, 0x6b, 0xad, 0x46, 0xc6, 0xd0, 0xb9, 0x77, 0x0f, 0x72, 0x50,
-	0xea, 0xd6, 0xbd, 0x63, 0xf0, 0x6c, 0x7d, 0xb2, 0xac, 0x75, 0x0a, 0xfe, 0x27, 0x64, 0xb7, 0x48,
-	0xf6, 0xff, 0x1a, 0xc2, 0xc8, 0x7c, 0x04, 0x83, 0x7f, 0xf0, 0x71, 0xdd, 0xe2, 0x93, 0xdf, 0x01,
-	0x00, 0x00, 0xff, 0xff, 0x14, 0x0c, 0x54, 0x28, 0x71, 0x05, 0x00, 0x00,
 }

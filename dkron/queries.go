@@ -5,42 +5,54 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/abronan/valkeyrie/store"
 	"github.com/hashicorp/serf/serf"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	QuerySchedulerRestart = "scheduler:restart"
-	QueryRunJob           = "run:job"
-	QueryExecutionDone    = "execution:done"
-
-	rescheduleTime = 2 * time.Second
+	// QueryRunJob define a run job query string
+	QueryRunJob = "run:job"
+	// QueryExecutionDone define the execution done query string
+	QueryExecutionDone = "execution:done"
 )
 
-var rescheduleThrotle *time.Timer
-
+// RunQueryParam defines the struct used to send a Run query
+// using serf.
 type RunQueryParam struct {
 	Execution *Execution `json:"execution"`
 	RPCAddr   string     `json:"rpc_addr"`
 }
 
-// Send a serf run query to the cluster, this is used to ask a node or nodes
+// RunQuery sends a serf run query to the cluster, this is used to ask a node or nodes
 // to run a Job.
-func (a *Agent) RunQuery(ex *Execution) {
+func (a *Agent) RunQuery(jobName string, ex *Execution) *Job {
+	start := time.Now()
 	var params *serf.QueryParam
 
-	job, err := a.Store.GetJob(ex.JobName, nil)
-
+	job, err := a.Store.GetJob(jobName, nil)
 	if err != nil {
-		//Job can be removed and the QuerySchedulerRestart not yet received.
-		//In this case, the job will not be found in the store.
-		if err == store.ErrKeyNotFound {
-			log.Warning("agent: Job not found, cancelling this execution")
-			return
-		}
-		log.WithError(err).Fatal("agent: Getting job error")
-		return
+		log.WithError(err).WithFields(logrus.Fields{
+			"job":    job.Name,
+			"method": "RunQuery",
+		}).Fatal("queries: Error retrieveing job from store")
+		return nil
+	}
+
+	if e, ok := a.sched.GetEntry(jobName); ok {
+		job.Next = e.Next
+		job.Status = StatusRunning
+	} else {
+		log.WithError(err).WithFields(logrus.Fields{
+			"job":    job.Name,
+			"method": "RunQuery",
+		}).Fatal("queries: Error retrieveing job from scheduler")
+	}
+
+	if err := a.applySetJob(job.ToProto()); err != nil {
+		log.WithError(err).WithFields(logrus.Fields{
+			"job":    job.Name,
+			"method": "RunQuery",
+		}).Fatal("agent: Error storing job before running")
 	}
 
 	// In the first execution attempt we build and filter the target nodes
@@ -48,13 +60,12 @@ func (a *Agent) RunQuery(ex *Execution) {
 	if ex.Attempt <= 1 {
 		filterNodes, filterTags, err := a.processFilteredNodes(job)
 		if err != nil {
-			log.WithFields(logrus.Fields{
+			log.WithError(err).WithFields(logrus.Fields{
 				"job": job.Name,
-				"err": err.Error(),
 			}).Fatal("agent: Error processing filtered nodes")
 		}
 		log.Debug("agent: Filtered nodes to run: ", filterNodes)
-		log.Debug("agent: Filtered tags to run: ", job.Tags)
+		log.Debug("agent: Filtered tags to run: ", filterTags)
 
 		//serf match regexp but we want only match full tag
 		serfFilterTags := make(map[string]string)
@@ -82,7 +93,7 @@ func (a *Agent) RunQuery(ex *Execution) {
 		Execution: ex,
 		RPCAddr:   a.getRPCAddr(),
 	}
-	rqpJson, _ := json.Marshal(rqp)
+	rqpJSON, _ := json.Marshal(rqp)
 
 	log.WithFields(logrus.Fields{
 		"query":    QueryRunJob,
@@ -92,10 +103,10 @@ func (a *Agent) RunQuery(ex *Execution) {
 	log.WithFields(logrus.Fields{
 		"query":    QueryRunJob,
 		"job_name": job.Name,
-		"json":     string(rqpJson),
+		"json":     string(rqpJSON),
 	}).Debug("agent: Sending query")
 
-	qr, err := a.serf.Query(QueryRunJob, rqpJson, params)
+	qr, err := a.serf.Query(QueryRunJob, rqpJSON, params)
 	if err != nil {
 		log.WithField("query", QueryRunJob).WithError(err).Fatal("agent: Sending query error")
 	}
@@ -127,64 +138,11 @@ func (a *Agent) RunQuery(ex *Execution) {
 		}
 	}
 	log.WithFields(logrus.Fields{
+		"time":  time.Since(start),
 		"query": QueryRunJob,
 	}).Debug("agent: Done receiving acks and responses")
-}
 
-// SchedulerRestart Dispatch a SchedulerRestartQuery to the cluster but
-// after a timeout to actually throtle subsequent calls
-func (a *Agent) SchedulerRestart() {
-	if rescheduleThrotle == nil {
-		rescheduleThrotle = time.AfterFunc(rescheduleTime, func() {
-			// In case we are using BoltDB we just need to reschedule because
-			// there is no leader nor other nodes.
-			// In case of using any other engine send the scheduler restart query.
-			if a.config.Backend == store.BOLTDB {
-				a.schedule()
-			} else {
-				a.schedulerRestartQuery(string(a.Store.GetLeader()))
-			}
-		})
-	} else {
-		rescheduleThrotle.Reset(rescheduleTime)
-	}
-}
-
-// Broadcast a SchedulerRestartQuery to the cluster, only server members
-// will attend to this. Forces a scheduler restart and reload all jobs.
-func (a *Agent) schedulerRestartQuery(leaderName string) {
-	params := &serf.QueryParam{
-		FilterNodes: []string{leaderName},
-		RequestAck:  true,
-	}
-
-	qr, err := a.serf.Query(QuerySchedulerRestart, []byte(""), params)
-	if err != nil {
-		log.WithError(err).Fatal("agent: Error sending the scheduler reload query")
-	}
-	defer qr.Close()
-
-	ackCh := qr.AckCh()
-	respCh := qr.ResponseCh()
-
-	for !qr.Finished() {
-		select {
-		case ack, ok := <-ackCh:
-			if ok {
-				log.WithFields(logrus.Fields{
-					"from": ack,
-				}).Debug("agent: Received ack")
-			}
-		case resp, ok := <-respCh:
-			if ok {
-				log.WithFields(logrus.Fields{
-					"from":    resp.From,
-					"payload": string(resp.Payload),
-				}).Debug("agent: Received response")
-			}
-		}
-	}
-	log.WithField("query", QuerySchedulerRestart).Debug("agent: Done receiving acks and responses")
+	return job
 }
 
 // Broadcast a ExecutionDone to the cluster.

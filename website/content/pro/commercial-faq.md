@@ -16,7 +16,7 @@ I'm sure you're very nice but no. Everyone pays the same price.
 
 ### What is the license?
 
-See [COMM-LICENSE](https://github.com/victorcoder/dkron/blob/master/COMM-LICENSE).
+See [COMM-LICENSE](https://github.com/distribworks/dkron/blob/master/COMM-LICENSE).
 
 ### How does Pro licensing work?
 
@@ -24,7 +24,7 @@ Every organization running Dkron Pro on its own servers must have a license. The
 
 ### What happens if my subscription lapses?
 
-You must have an active subscription to run Dkron Pro. After a one week grace period, you'll lose access to the package repository and priority support. You won't get any more updates or bug fixes and 'apt-get install dkron-pro' won't work anymore.
+You must have an active subscription to run Dkron Pro. After a one week grace period, you'll lose access to the package repository and priority support. You won't get any more updates or bug fixes and `apt-get install dkron-pro` won't work anymore.
 
 ### Can I distribute Dkron Pro to my customers?
 
@@ -53,7 +53,7 @@ If you purchased Dkron Pro ([settings](https://gumroad.com/settings)) with a cre
 
 ## Can I request a change to the license terms?
 
-Dkron Pro is sold as is, no change to terms.
+Dkron Pro purchasing the Appliance license can ask for changes to the terms and conditions. Email your concerns and we can negotiate something.
 
 ## Can I pay via invoice and purchase order?
 

@@ -1,6 +1,7 @@
 package dkron
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -8,44 +9,46 @@ import (
 	"github.com/hashicorp/serf/testutil"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGRPCExecutionDone(t *testing.T) {
-	store := NewStore("etcdv3", []string{etcdAddr}, nil, "dkron", nil)
-	viper.Reset()
+	dir, err := ioutil.TempDir("", "dkron-test")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
 
-	// Cleanup everything
-	err := store.Client.DeleteTree("dkron")
-	if err != nil {
-		t.Logf("error cleaning up: %s", err)
-	}
+	viper.Reset()
 
 	aAddr := testutil.GetBindAddr().String()
 
 	c := DefaultConfig()
 	c.BindAddr = aAddr
-	c.BackendMachines = []string{etcdAddr}
-	c.NodeName = "test1"
+	c.NodeName = "test-grpc"
 	c.Server = true
 	c.LogLevel = logLevel
-	c.Keyspace = "dkron"
-	c.Backend = "etcdv3"
-	c.BackendMachines = []string{os.Getenv("DKRON_BACKEND_MACHINE")}
+	c.BootstrapExpect = 1
+	c.DevMode = true
+	c.DataDir = dir
 
-	a := NewAgent(c, nil)
+	a := NewAgent(c)
 	a.Start()
 
-	time.Sleep(2 * time.Second)
+	for {
+		if a.IsLeader() {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 
 	testJob := &Job{
 		Name:           "test",
-		Schedule:       "@every 1m",
+		Schedule:       "@manually",
 		Executor:       "shell",
-		ExecutorConfig: map[string]string{"command": "/bin/false"},
+		ExecutorConfig: map[string]string{"command": "/bin/true"},
 		Disabled:       true,
 	}
 
-	if err := store.SetJob(testJob, true); err != nil {
+	if err := a.Store.SetJob(testJob, true); err != nil {
 		t.Fatalf("error creating job: %s", err)
 	}
 
@@ -59,18 +62,18 @@ func TestGRPCExecutionDone(t *testing.T) {
 		Output:     []byte("type"),
 	}
 
-	rc := NewGRPCClient(nil)
-	rc.CallExecutionDone(a.getRPCAddr(), testExecution)
-	execs, _ := store.GetExecutions("test")
+	rc := NewGRPCClient(nil, a)
+	rc.ExecutionDone(a.getRPCAddr(), testExecution)
+	execs, _ := a.Store.GetExecutions("test")
 
 	assert.Len(t, execs, 1)
 	assert.Equal(t, string(testExecution.Output), string(execs[0].Output))
 
 	// Test store execution on a deleted job
-	store.DeleteJob(testJob.Name)
+	a.Store.DeleteJob(testJob.Name)
 
 	testExecution.FinishedAt = time.Now()
-	err = rc.CallExecutionDone(a.getRPCAddr(), testExecution)
+	err = rc.ExecutionDone(a.getRPCAddr(), testExecution)
 
 	assert.Error(t, err, ErrExecutionDoneForDeletedJob)
 }

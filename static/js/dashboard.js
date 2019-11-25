@@ -14,6 +14,8 @@ dkron.filter('statusClass', function () {
         return 'status-warning glyphicon-exclamation-sign'
       case 'running':
         return 'status-running glyphicon-play-circle'
+      default:
+        return 'glyphicon-question-sign'
     }
     return input;
   };
@@ -22,13 +24,20 @@ dkron.filter('statusClass', function () {
 
 dkron.constant('hideDelay', 2000);
 
-dkron.controller('JobListCtrl', function ($scope, $http, $interval, hideDelay) {
+dkron.controller('JobListCtrl', function ($scope, $location, $http, $interval, hideDelay) {
+  $scope.searchJob = $location.search()['filter']
+
+  $scope.filter = function (filter) {
+    $scope.searchJob = filter;
+  };
+
   // pretty json func
   $scope.toJson = function (str) {
     return angular.toJson(str, true);
   }
   $scope.jobTemplate = {
     name: "job",
+    displayname: "",
     schedule: "",
     owner: "",
     owner_email: "",
@@ -167,6 +176,8 @@ dkron.controller('JobListCtrl', function ($scope, $http, $interval, hideDelay) {
   // calculate page in place
   $scope.groupToPages = function () {
     $scope.gap = Math.round($scope.jobs.length / $scope.itemsPerPage);
+    $scope.gap = Math.min($scope.gap, 10);
+    
     $scope.pagedItems = [];
 
     for (var i = 0; i < $scope.jobs.length; i++) {
@@ -191,6 +202,12 @@ dkron.controller('JobListCtrl', function ($scope, $http, $interval, hideDelay) {
     return ret;
   };
 
+  $scope.firstPage = function () {
+    if ($scope.currentPage > 0) {
+      $scope.currentPage = 0;
+    }
+  };
+
   $scope.prevPage = function () {
     if ($scope.currentPage > 0) {
       $scope.currentPage--;
@@ -200,6 +217,12 @@ dkron.controller('JobListCtrl', function ($scope, $http, $interval, hideDelay) {
   $scope.nextPage = function () {
     if ($scope.currentPage < $scope.pagedItems.length - 1) {
       $scope.currentPage++;
+    }
+  };
+
+  $scope.lastPage = function () {
+    if ($scope.currentPage < $scope.pagedItems.length - 1) {
+      $scope.currentPage = Math.ceil($scope.jobs.length / $scope.itemsPerPage) - 1;
     }
   };
 
@@ -235,9 +258,12 @@ dkron.controller('JobListCtrl', function ($scope, $http, $interval, hideDelay) {
       success_count = success_count + data[i].success_count;
       error_count = error_count + data[i].error_count;
 
-      if (new Date(Date.parse(data[i].last_success)) > new Date(Date.parse(data[i].last_error))) {
+      // Compute last...Dates: they're either a date or null
+      var lastSuccessDate = data[i].last_success && new Date(Date.parse(data[i].last_success));
+      var lastErrorDate = data[i].last_error && new Date(Date.parse(data[i].last_error));
+      if ((lastSuccessDate !== null && lastErrorDate === null) || lastSuccessDate > lastErrorDate) {
         $scope.successful_jobs = $scope.successful_jobs + 1;
-      } else {
+      } else if ((lastSuccessDate === null && lastErrorDate !== null) || lastSuccessDate < lastErrorDate) {
         $scope.failed_jobs = $scope.failed_jobs + 1;
       }
     }
@@ -275,19 +301,10 @@ dkron.controller('IndexCtrl', function ($scope, $http, $timeout, $element) {
     interpolation: 'linear'
   };
 
-  $scope.series = [{
-    name: 'Success count',
-    color: 'green',
-    data: [{ x: 0, y: 0 }]
-  }, {
-    name: 'Error count',
-    color: 'red',
-    data: [{ x: 0, y: 0 }]
-  }];
   $scope.features = {
     hover: {
       xFormatter: function (x) {
-        return x;
+        return new Date(x*1000);
       },
       yFormatter: function (y) {
         return y;
@@ -299,12 +316,13 @@ dkron.controller('IndexCtrl', function ($scope, $http, $timeout, $element) {
     },
     yAxis: {
       tickFormat: Rickshaw.Fixtures.Number.formatKMBT
-    },
-    xAxis: {
-      tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
-      timeUnit: 'hour'
     }
   };
+
+  $scope.series = new Rickshaw.Series.FixedDuration([{name: 'Success', color: '#006f68'}, {name: 'Failed', color: '#B1003E'}], undefined, {
+    timeInterval: 2000,
+    maxDataPoints: 100
+  });
 
   updateView = function () {
     var response = $http.get(DKRON_API_PATH + '/jobs');
@@ -349,19 +367,19 @@ dkron.controller('IndexCtrl', function ($scope, $http, $timeout, $element) {
     });
   }
 
+  // Init values
   $scope.success_count = 0;
   $scope.error_count = 0;
   $scope.failed_jobs = 0;
   $scope.successful_jobs = 0;
+  $scope.running = 0;
   $scope.jobs = [];
+  $scope.i = 0;
 
   $scope.updateGraph = function (data) {
-    var gdata = $scope.series[0].data;
-    var name = $scope.series[0].name;
-    var color = $scope.series[0].color;
     var success_count = 0;
     var error_count = 0;
-    var diff = 0;
+    var running = 0;
 
     $scope.jobs = data;
     $scope.failed_jobs = 0;
@@ -371,41 +389,43 @@ dkron.controller('IndexCtrl', function ($scope, $http, $timeout, $element) {
       success_count = success_count + data[i].success_count;
       error_count = error_count + data[i].error_count;
 
-      if (new Date(Date.parse(data[i].last_success)) > new Date(Date.parse(data[i].last_error))) {
+      // Compute last...Dates: they're either a date or null
+      var lastSuccessDate = data[i].last_success && new Date(Date.parse(data[i].last_success));
+      var lastErrorDate = data[i].last_error && new Date(Date.parse(data[i].last_error));
+      if ((lastSuccessDate !== null && lastErrorDate === null) || lastSuccessDate > lastErrorDate) {
         $scope.successful_jobs = $scope.successful_jobs + 1;
-      } else {
+      } else if ((lastSuccessDate === null && lastErrorDate !== null) || lastSuccessDate < lastErrorDate) {
         $scope.failed_jobs = $scope.failed_jobs + 1;
       }
+
+      if (data[i].status == 'running') {
+        running = running + 1;
+      }
     }
-    if ($scope.success_count != 0) {
-      diff = success_count - $scope.success_count;
+
+    // Store the previous data
+    if ($scope.i === 0) {
+      var successData = success_count;
+      var failedData = error_count;
+    } else {
+      var successData = $scope.success_count;
+      var failedData = $scope.error_count;
     }
+
+    // Update panel stats
     $scope.success_count = success_count;
-
-    gdata.push({ x: gdata[gdata.length - 1].x + 1, y: diff })
-
-    $scope.series[0] = {
-      name: name,
-      color: color,
-      data: gdata
-    };
-
-    gdata = $scope.series[1].data;
-    name = $scope.series[1].name;
-    color = $scope.series[1].color;
-
-    if ($scope.error_count != 0) {
-      diff = error_count - $scope.error_count;
-    }
     $scope.error_count = error_count;
 
-    gdata.push({ x: gdata[gdata.length - 1].x + 1, y: diff })
+    // Rickshaw graph update
+    dataPoint = {}
+    dataPoint['Success'] = success_count - successData;
+    dataPoint['Failed'] = error_count - failedData;
 
-    $scope.series[1] = {
-      name: name,
-      color: color,
-      data: gdata
-    };
+    $scope.series.addData(dataPoint);
+
+    // Broadcast a fake resize event to force render
+    $scope.$broadcast('rickshaw::resize');
+    $scope.i++;
   }
 
   updateView();

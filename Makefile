@@ -2,7 +2,7 @@ LINUX_PKGS := $(wildcard dist/*.deb) $(wildcard dist/*.rpm)
 .PHONY: fury $(LINUX_PKGS)
 fury: $(LINUX_PKGS)
 $(LINUX_PKGS):
-	fury push $@
+	fury push --as distribworks $@
 
 .PHONY: goreleaser
 goreleaser:
@@ -34,6 +34,7 @@ clean:
 
 .PHONY: doc apidoc gen test
 doc:
+	scripts/run doc --dir website/content/cli
 	cd website; hugo -d ../public
 	ghp-import -p public
 

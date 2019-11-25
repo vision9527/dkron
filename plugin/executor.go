@@ -5,8 +5,8 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/distribworks/dkron/v2/dkron"
 	"github.com/hashicorp/go-plugin"
-	"github.com/victorcoder/dkron/dkron"
 )
 
 // This is the implementation of plugin.Plugin so we can serve/consume this.

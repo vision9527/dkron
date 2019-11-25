@@ -1,3 +1,45 @@
+## 1.2.5
+
+- Fix: dependent job updates (@yvanoers)
+- Fix: Job reschedule on every page refresh
+- Fix: paginator gap and add First and Last button
+- Fix: new jobs counting as failed in dashboard (@yvanoers)
+- Feature: backend TLS support (@fopina)
+- Feature: support for authentication with etcd backend (@fopina)
+- Fix: sample dkron.yml for slack configuration (@kakakikikeke-fork)
+
+## 1.2.4
+
+- Update swagger spec: fix executor_config, add status
+- New site design
+- Testing: Parameterize test suite to use any backend
+- Refactor: GetLastExecutionGroup to simplify code
+
+## 1.2.3
+
+- Fix: Bump valkeyrie with redis watches fix
+- Implement server selection using consistent hash
+- Upgrade serf to 0.8.2
+- refactor: Store should implement the interface
+
+## 1.2.2
+
+- Fix: Use branched valkeyrie fixing DynamoDB return all items
+
+## 1.2.1
+
+- Fix: scheduler_started expvar fix
+
+## 1.2.0
+
+- Fix: Update executor support error log instead of fail only (@tengattack)
+- Feature: Return next execution field in API and dashboard.
+- Feature: Add backend redis password flag (@lisuo3389)
+- Feature: Add backend consul token
+- Improvement: Main graph showing running jobs
+
+**NOTE: Breaking change for 3rd party plugins, executors plugins interface signature changed, should be recompiled and adapted.**
+
 ## 1.1.1
 
 - Add RPC leave command
@@ -329,9 +371,9 @@ Due to the change in the internal tags `server` to `dkron_server`, you'll need t
 
 - Refactor leader election, the old method could lead to cases where 2 or more nodes could have the scheduler running without noticing the other master.
 - Get rid of `keys`, in a serf cluster node names are unique so using it for leader keys now.
-- Fix [#85](https://github.com/victorcoder/dkron/issues/85) Restart scheduler on job deletion
+- Fix [#85](https://github.com/distribworks/dkron/issues/85) Restart scheduler on job deletion
 - Refactor logging, replace `debug` with `log-level`
-- Order nodes in UI [#81](https://github.com/victorcoder/dkron/issues/81) (kudos @whizz)
+- Order nodes in UI [#81](https://github.com/distribworks/dkron/issues/81) (kudos @whizz)
 - Add exposed vars to easy debugging
 - Go 1.6
 - Add @minutely as predefined schedule (kudos @mlafeldt)
@@ -343,7 +385,7 @@ To upgrade an existing installation you must first delete the pre-exiting leader
 ## 0.6.4 (2016-02-18)
 
 - Use expvars to expose metrics
-- fix https://github.com/victorcoder/dkron/issues/71
+- fix https://github.com/distribworks/dkron/issues/71
 - Better example config in package and docs
 
 ## 0.6.3 (2015-12-28)
@@ -353,11 +395,11 @@ To upgrade an existing installation you must first delete the pre-exiting leader
 
 ## 0.6.2 (2015-12-22)
 
-- Fixed [#62](https://github.com/victorcoder/dkron/issues/55)
+- Fixed [#62](https://github.com/distribworks/dkron/issues/55)
 
 ## 0.6.1 (2015-12-21)
 
-- Fixed bugs [#55](https://github.com/victorcoder/dkron/issues/55), [#52](https://github.com/victorcoder/dkron/issues/52), etc.
+- Fixed bugs [#55](https://github.com/distribworks/dkron/issues/55), [#52](https://github.com/distribworks/dkron/issues/52), etc.
 - Build for linux arm
 
 ## 0.6.0 (2015-12-11)

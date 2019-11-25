@@ -1,4 +1,8 @@
-# Dkron - Distributed, fault tolerant job scheduling system [![GoDoc](https://godoc.org/github.com/victorcoder/dkron?status.svg)](https://godoc.org/github.com/victorcoder/dkron) [![Build Status](https://travis-ci.org/victorcoder/dkron.svg?branch=master)](https://travis-ci.org/victorcoder/dkron)
+<p align="center">
+<img width="400" src="docs/images/DKRON_STICKER_OK_CMYK_RGB_CONV_300.png" alt="Dkron" title="Dkron" />
+</p>
+
+# Dkron - Distributed, fault tolerant job scheduling system for cloud native environments [![GoDoc](https://godoc.org/github.com/distribworks/dkron?status.svg)](https://godoc.org/github.com/distribworks/dkron) [![Actions Status](https://github.com/distribworks/dkron/workflows/Test/badge.svg)](https://github.com/distribworks/dkron/actions) [![Gitter](https://badges.gitter.im/distribworks/dkron.svg)](https://gitter.im/distribworks/dkron)
 
 Website: http://dkron.io/
 
@@ -8,13 +12,19 @@ Dkron is a distributed cron service, easy to setup and fault tolerant with focus
 - Reliable: Completely fault tolerant
 - High scalable: Able to handle high volumes of scheduled jobs and thousands of nodes
 
-Dkron is written in Go and leverage the power of distributed key-value stores and serf for providing fault tolerance, reliability and scalability while keeping simple and easily installable.
+Dkron is written in Go and leverage the power of the Raft protocol and Serf for providing fault tolerance, reliability and scalability while keeping simple and easily installable.
 
 Dkron is inspired by the google whitepaper [Reliable Cron across the Planet](https://queue.acm.org/detail.cfm?id=2745840) and by Airbnb Chronos borrowing the same features from it.
 
 Dkron runs on Linux, OSX and Windows. It can be used to run scheduled commands on a server cluster using any combination of servers for each job. It has no single points of failure due to the use of the Gossip protocol and fault tolerant distributed databases.
 
 You can use Dkron to run the most important part of your company, scheduled jobs.
+
+## Project status
+
+Dkron v1.x is the previous stable still used in production by several companies.
+
+Dkron v2.x is the latest version also stable and used in production by several companies, if you are going to start a new deployment, use this.
 
 ## Installation
 
@@ -34,7 +44,10 @@ Next, run the included Docker Compose config:
 
 This will start Dkron instances. To add more Dkron instances to the clusters:
 
-`docker-compose scale dkron=4`
+```
+docker-compose up --scale dkron-server=4
+docker-compose up --scale dkron-agent=10
+```
 
 Check the port mapping using `docker-compose ps` and use the browser to navigate to the Dkron dashboard using one of the ports mapped by compose.
 
@@ -64,7 +77,7 @@ https://github.com/gromo/dkron-php-adapter
 
 ## Get in touch
 
-- Twitter: [@distribworks](https://twitter.com/distribworks) or [@victorcoder](https://twitter.com/victorcoder)
+- Twitter: [@distribworks](https://twitter.com/distribworks) or [@distribworks](https://twitter.com/distribworks)
 - Email: victor at distrib.works
 
 # Sponsor

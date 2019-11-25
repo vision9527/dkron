@@ -5,14 +5,13 @@ import (
 	"os"
 	"testing"
 
+	"github.com/distribworks/dkron/v2/dkron"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"github.com/victorcoder/dkron/dkron"
 )
 
 var (
 	logLevel = "error"
-	etcdAddr = getEnvWithDefault()
 )
 
 func getEnvWithDefault() string {
