@@ -1,8 +1,11 @@
 package dkron
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/dgraph-io/badger/v2"
 	"github.com/gin-contrib/expvar"
@@ -72,6 +75,8 @@ func (h *HTTPTransport) APIRoutes(r *gin.RouterGroup) {
 	v1.PATCH("/jobs", h.jobCreateOrUpdateHandler)
 	// Place fallback routes last
 	v1.GET("/jobs", h.jobsHandler)
+	v1.GET("/exportJobs", h.exportJobsHandler)
+	v1.POST("/restoreJobs", h.restoreJobsHandler)
 
 	jobs := v1.Group("/jobs")
 	jobs.DELETE("/:job", h.jobDeleteHandler)
@@ -205,6 +210,49 @@ func (h *HTTPTransport) jobRunHandler(c *gin.Context) {
 	c.Header("Location", c.Request.RequestURI)
 	c.Status(http.StatusAccepted)
 	renderJSON(c, http.StatusOK, job)
+}
+
+func (h *HTTPTransport) exportJobsHandler(c *gin.Context) {
+	metadata := c.QueryMap("metadata")
+	jobs, err := h.agent.Store.GetJobs(&JobOptions{Metadata: metadata})
+	if err != nil {
+		c.AbortWithError(http.StatusNotFound, err)
+		return
+	}
+
+	exJSON, err := json.Marshal(jobs)
+	if err != nil {
+		c.AbortWithError(http.StatusNotFound, err)
+		return
+	}
+
+	downloadName := time.Now().Unix()
+	c.Header("Content-Description", "File Transfer")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=backupJobs-%d.json", downloadName))
+	c.Data(http.StatusOK, "application/octet-stream", exJSON)
+}
+
+func (h *HTTPTransport) restoreJobsHandler(c *gin.Context) {
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		c.AbortWithError(http.StatusNotFound, err)
+		return
+	}
+
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		c.AbortWithError(http.StatusNotFound, err)
+		return
+	}
+	fmt.Printf("content:%s \n", string(data))
+	var jobs []*Job
+	err = json.Unmarshal(data, jobs)
+	if err != nil {
+		c.AbortWithError(http.StatusNotFound, err)
+		return
+	}
+	fmt.Printf("jobsjobsjobsjobs:%v \n", &jobs)
+	renderJSON(c, http.StatusOK, nil)
 }
 
 func (h *HTTPTransport) executionsHandler(c *gin.Context) {
