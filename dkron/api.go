@@ -232,7 +232,8 @@ func (h *HTTPTransport) exportJobsHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "application/octet-stream", exJSON)
 }
 
-// overwrite job if the job is ex
+// Restore jobs from file.
+// Overwrite job if the job is exist.
 func (h *HTTPTransport) restoreJobsHandler(c *gin.Context) {
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
