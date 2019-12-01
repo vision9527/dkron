@@ -272,11 +272,10 @@ func TestAPIJobRestore(t *testing.T) {
 	respBody, _ := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	rs := string(respBody)
-	fmt.Println("backup response: ", rs)
+	fmt.Println("restore response: ", rs)
 	if strings.Contains(rs, "fail") {
-		t.Fatalf("backup json file request error: %s", rs)
+		t.Fatalf("restore json file request error: %s", rs)
 	}
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 }
 

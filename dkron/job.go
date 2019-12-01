@@ -373,7 +373,7 @@ func findParentJob(jobs []*Job, index int) ([]*Job, bool, error) {
 	childJob := jobs[index]
 	// Validate job
 	if err := childJob.Validate(); err != nil {
-		return nil, false, errors.New("validate job error, job name:" + childJob.Name)
+		return nil, false, err
 	}
 	if childJob.ParentJob == "" {
 		return jobs, true, nil
@@ -395,7 +395,7 @@ func findParentJob(jobs []*Job, index int) ([]*Job, bool, error) {
 			}
 		}
 	}
-	return nil, false, errors.New("not find parent job, job name:" + childJob.Name)
+	return nil, false, ErrNoParent
 }
 
 func findParentJobInChildJobs(jobs []*Job, job *Job) bool {
