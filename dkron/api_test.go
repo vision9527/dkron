@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -237,6 +240,43 @@ func TestAPIJobCreateUpdateJobWithInvalidParentIsNotCreated(t *testing.T) {
 	resp, err = http.Get(baseURL + "/jobs/test_job")
 	require.NoError(t, err, err)
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+}
+
+func TestAPIJobRestore(t *testing.T) {
+	port := "8100"
+	baseURL := fmt.Sprintf("http://localhost:%s/v1/restoreJobs", port)
+	dir, a := setupAPITest(t, port)
+	defer os.RemoveAll(dir)
+	defer a.Stop()
+
+	bodyBuffer := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuffer)
+
+	fileWriter, err := bodyWriter.CreateFormFile("file", "testBackupJobs.json")
+	if err != nil {
+		t.Fatalf("CreateFormFile error: %s", err)
+	}
+
+	file, err := os.Open("../scripts/testBackupJobs.json")
+	if err != nil {
+		t.Fatalf("open job json file error: %s", err)
+	}
+	defer file.Close()
+
+	io.Copy(fileWriter, file)
+
+	contentType := bodyWriter.FormDataContentType()
+	bodyWriter.Close()
+
+	resp, _ := http.Post(baseURL, contentType, bodyBuffer)
+	respBody, _ := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err, err)
+	defer resp.Body.Close()
+	if strings.Contains(string(respBody), "fail") {
+		t.Fatalf("backup json file request error: %s", err)
+	}
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
 }
 
 // postJob POSTs the given json to the jobs endpoint and returns the response

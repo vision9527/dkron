@@ -2,7 +2,6 @@ package dkron
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -451,32 +450,12 @@ func Test_generateJobTree(t *testing.T) {
 	var jobs []*Job
 	err := json.Unmarshal([]byte(jsonString), &jobs)
 	if err != nil {
-		fmt.Println("jobsjobsjobserror:", err)
+		t.Fatalf("unmarshal json job error: %s", err)
 	}
-	fmt.Println("jobsjobsjobs11:", jobs)
-	j, err := generateJobTree(jobs)
+	jobTree, err := generateJobTree(jobs)
 	if err != nil {
-		fmt.Println("generateJobTreeerr=", err)
+		t.Fatalf("generate job tree error: %s", err)
 	}
-	fmt.Println("jobsjobsjobs22:", len(j))
-	fmt.Println("jobsjobsjobs22:", j)
-	fmt.Println("---------------")
-	fmt.Println("---------------")
-	fmt.Println("---------------")
-	fmt.Println("---------------")
-	for _, a := range j {
-		fmt.Println("1111111=", a.Name)
-		if len(a.ChildJobs) > 0 {
-			for _, i := range a.ChildJobs {
-				fmt.Printf("22222222=parent.name=%s , child.name=%s \n", a.Name, i.Name)
-				if len(i.ChildJobs) > 0 {
-					for _, c := range i.ChildJobs {
-						fmt.Printf("33333333=parent.name=%s , child.name=%s, childchild.name=%s \n", a.Name, i.Name, c.Name)
-						fmt.Println("========")
-					}
-				}
-			}
-		}
-	}
+	assert.Equal(t, len(jobTree), 3)
 
 }

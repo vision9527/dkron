@@ -232,6 +232,7 @@ func (h *HTTPTransport) exportJobsHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "application/octet-stream", exJSON)
 }
 
+// overwrite job if the job is ex
 func (h *HTTPTransport) restoreJobsHandler(c *gin.Context) {
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
@@ -241,7 +242,7 @@ func (h *HTTPTransport) restoreJobsHandler(c *gin.Context) {
 
 	data, err := ioutil.ReadAll(file)
 	if err != nil {
-		c.AbortWithError(http.StatusNotFound, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	var jobs []*Job

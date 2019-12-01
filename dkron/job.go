@@ -413,6 +413,5 @@ func findParentJobInChildJobs(jobs []*Job, job *Job) bool {
 
 		}
 	}
-
 	return false
 }

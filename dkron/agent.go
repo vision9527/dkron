@@ -886,10 +886,10 @@ func (a *Agent) recursiveSetJob(jobs []*Job) []string {
 	for _, job := range jobs {
 		err := a.GRPCClient.SetJob(job)
 		if err != nil {
-			result = append(result, "error create:"+job.Name)
+			result = append(result, "fail create "+job.Name)
 			continue
 		} else {
-			result = append(result, "success create:"+job.Name)
+			result = append(result, "success create "+job.Name)
 			if len(job.ChildJobs) > 0 {
 				recursiveResult := a.recursiveSetJob(job.ChildJobs)
 				result = append(result, recursiveResult...)
