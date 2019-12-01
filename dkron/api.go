@@ -244,15 +244,25 @@ func (h *HTTPTransport) restoreJobsHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
-	fmt.Printf("content:%s \n", string(data))
 	var jobs []*Job
-	err = json.Unmarshal(data, jobs)
+	err = json.Unmarshal(data, &jobs)
+
 	if err != nil {
-		c.AbortWithError(http.StatusNotFound, err)
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	fmt.Printf("jobsjobsjobsjobs:%v \n", &jobs)
-	renderJSON(c, http.StatusOK, nil)
+	jobTree, err := generateJobTree(jobs)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	result := h.agent.recursiveSetJob(jobTree)
+	resp, err := json.Marshal(result)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	renderJSON(c, http.StatusOK, string(resp))
 }
 
 func (h *HTTPTransport) executionsHandler(c *gin.Context) {

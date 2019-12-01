@@ -102,7 +102,7 @@ type Job struct {
 	DependentJobs []string `json:"dependent_jobs"`
 
 	// Job pointer that are dependent upon this one
-	ChildJobs []*Job
+	ChildJobs []*Job `json:"-"`
 
 	// Job id of job that this job is dependent upon.
 	ParentJob string `json:"parent_job"`
@@ -351,29 +351,51 @@ func isSlug(candidate string) (bool, string) {
 	return whyNot == "", whyNot
 }
 
-func findParentJob(jobs []*Job, index int) (bool, error) {
+// generate Job Tree
+func generateJobTree(jobs []*Job) ([]*Job, error) {
+
+	length := len(jobs)
+	j := 0
+	for i := 0; i < length; i++ {
+		rejobs, isTopParentNodeFlag, err := findParentJob(jobs, j)
+		if err != nil {
+			return nil, err
+		}
+		if isTopParentNodeFlag {
+			j++
+		}
+		jobs = rejobs
+	}
+	return jobs, nil
+}
+
+func findParentJob(jobs []*Job, index int) ([]*Job, bool, error) {
 	childJob := jobs[index]
+	// Validate job
+	if err := childJob.Validate(); err != nil {
+		return nil, false, errors.New("validate job error, job name:" + childJob.Name)
+	}
 	if childJob.ParentJob == "" {
-		return true, nil
+		return jobs, true, nil
 	}
 	for _, parentJob := range jobs {
 		if parentJob.Name == childJob.Name {
 			continue
 		}
 		if childJob.ParentJob == parentJob.Name {
-			jobs = append(jobs[:index], jobs[index:]...)
-			return false, nil
+			parentJob.ChildJobs = append(parentJob.ChildJobs, childJob)
+			jobs = append(jobs[:index], jobs[index+1:]...)
+			return jobs, false, nil
 		}
 		if len(parentJob.ChildJobs) > 0 {
 			flag := findParentJobInChildJobs(parentJob.ChildJobs, childJob)
 			if flag {
-				jobs = append(jobs[:index], jobs[index:]...)
-				return false, nil
+				jobs = append(jobs[:index], jobs[index+1:]...)
+				return jobs, false, nil
 			}
 		}
-
 	}
-	return false, errors.New("not find parent job")
+	return nil, false, errors.New("not find parent job, job name:" + childJob.Name)
 }
 
 func findParentJobInChildJobs(jobs []*Job, job *Job) bool {
@@ -392,73 +414,5 @@ func findParentJobInChildJobs(jobs []*Job, job *Job) bool {
 		}
 	}
 
-	return false
-}
-
-// generate Job Tree
-func generateJobTree(jobs []*Job) ([]*Job, error) {
-
-	len := len(jobs)
-	for i := 0; i < len; i++ {
-		j := 0
-		isTopParentNodeFlag, err := findParentJob(jobs, j)
-		if err != nil {
-			fmt.Println("not find parent job:", nil)
-			return nil, nil
-		}
-		if isTopParentNodeFlag {
-			j++
-		}
-	}
-	// parentNodeJobs, childNodeJobs := generateJobNode(jobs)
-	// check if childNodeJob's parent job exists
-	// for _, job := range childNodeJobs {
-	// 	for _, parentJob := jobs {
-
-	// 	}
-	// }
-	// i := 0
-	// for len(childNodeJobs) > 0 && i < len(childNodeJobs) {
-	// 	var tempJobs []*Job
-	// 	for _, job := range childNodeJobs {
-	// 		if ok := findParentNodeJob(parentNodeJobs, job); ok {
-	// 			continue
-	// 		} else {
-	// 			tempJobs = append(tempJobs, job)
-	// 		}
-	// 	}
-	// 	childNodeJobs = tempJobs
-	// }
-
-	return parentNodeJobs, nil
-}
-
-func generateJobNode(jobs []*Job) (parentNodeJobs []*Job, childNodeJobs []*Job) {
-	j := 0
-	for _, job := range jobs {
-		if job.ParentJob == "" {
-			jobs[j] = job
-			j++
-		} else {
-			childNodeJobs = append(childNodeJobs, job)
-		}
-	}
-	parentNodeJobs = jobs[:j]
-	return
-}
-
-func findParentNodeJob(parentNodeJobs []*Job, childJob *Job) bool {
-	for _, job := range parentNodeJobs {
-		if job.Name == childJob.ParentJob {
-			job.ChildJobs = append(job.ChildJobs, childJob)
-			return true
-		} else {
-			result := findParentNodeJob(job.ChildJobs, childJob)
-			if result {
-				return true
-			}
-			continue
-		}
-	}
 	return false
 }
